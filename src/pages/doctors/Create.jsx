@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function FestivalsCreate() {
+import DoctorCreateForm from "@/components/CreateDoctorForm";
+
+export default function DoctorsCreate() {
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -28,7 +30,7 @@ export default function FestivalsCreate() {
         const { token } = useAuth();
         const options = {
             method: "POST",
-            url: `/festivals`,
+            url: `/doctors`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -37,15 +39,15 @@ export default function FestivalsCreate() {
 
         try {
             let response = await axios.request(options);
-            console.log("Single festival create api response:", response.data);
-            navigate("/festivals", {
+            console.log("Single doctor create api response:", response.data);
+            navigate("/doctors", {
                 state: {
                     type: "success",
-                    message: `Festival "${response.data.title}" created`,
+                    message: `Doctor "${response.data.title}" created`,
                 },
             });
         } catch (err) {
-            console.error("error creating festival:", err);
+            console.error("error creating doctor:", err);
             console.error("error response data:", err.response?.data);
             console.error("error response status:", err.response?.status);
         }
@@ -53,15 +55,16 @@ export default function FestivalsCreate() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log("handleSubmit engaged in FestivalsCreate");
+        console.log("handleSubmit engaged in doctorsCreate");
         console.log(form);
         createFestival();
     };
 
     return (
         <>
-            <h1>Create a new festival</h1>
-            <form onSubmit={handleSubmit} action="">
+            <h1>Create a new Doctor</h1>
+            <DoctorCreateForm/>
+            {/* <form onSubmit={handleSubmit} action="">
                 <Input
                     className="mt-2"
                     type="text"
@@ -109,7 +112,7 @@ export default function FestivalsCreate() {
                 >
                     Submit
                 </Button>
-            </form>
+            </form> */}
         </>
     );
 }

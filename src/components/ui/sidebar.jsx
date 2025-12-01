@@ -196,6 +196,7 @@ function Sidebar({
         );
     }
 
+    // Desktop Sidebar version
     return (
         <div
             className="group peer text-sidebar-foreground hidden md:block"

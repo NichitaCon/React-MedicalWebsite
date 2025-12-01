@@ -26,7 +26,7 @@ import { toast } from "sonner";
 //   CardTitle,
 // } from "@/components/ui/card";
 
-export default function Index() {
+export default function DoctorsIndex() {
     const [doctors, setDoctors] = useState([]);
     const navigate = useNavigate();
 
@@ -58,27 +58,27 @@ export default function Index() {
         <div>
             <Button asChild variant="outline" className={"mb-4 mr-auto block"}>
                 <Link size="sm" to={`/doctors/create`}>
-                    Create New Festival
+                    Create New Doctor
                 </Link>
             </Button>
             <Table>
                 <TableCaption>A list of doctors</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>City</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Specialisation</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {doctors.map((doctor) => (
                         <TableRow key={doctor.id}>
-                            <TableCell>{doctor.title}</TableCell>
-                            <TableCell>{doctor.city}</TableCell>
-                            <TableCell>{doctor.start_date}</TableCell>
-                            <TableCell>{doctor.end_date}</TableCell>
+                            <TableCell>Dr {doctor.first_name} {doctor.last_name}</TableCell>
+                            <TableCell>{doctor.specialisation}</TableCell>
+                            <TableCell>{doctor.email}</TableCell>
+                            <TableCell>{doctor.phone}</TableCell>
                             <TableCell>
                                 <div className="flex gap-2">
                                     <Button

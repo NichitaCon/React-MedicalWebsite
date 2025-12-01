@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 import LoginForm from "@/components/ui/LoginForm";
 
-export default function ShowFestival() {
+export default function DoctorShow() {
     const [festival, setFestival] = useState({});
     const { id } = useParams();
     const { token } = useAuth();

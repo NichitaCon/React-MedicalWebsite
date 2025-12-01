@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function FestivalsEdit() {
+export default function DoctorsEdit() {
     const [form, setForm] = useState({
         title: "",
         description: "",
