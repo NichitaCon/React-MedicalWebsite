@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
-import DoctorCreateForm from "@/components/CreateDoctorForm";
+import DoctorCreateForm from "@/components/customComponents/CreateDoctorForm";
 
 export default function DoctorsCreate() {
     const [form, setForm] = useState({

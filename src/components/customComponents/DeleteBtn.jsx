@@ -1,24 +1,20 @@
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Trash } from "lucide-react";
 import axios from "@/config/api";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function DeleteBtn({ resource, id, onDeleteCallBack }) {
     const [deleteWarn, setDeleteWarn] = useState(false);
-
-    let token = localStorage.getItem("token");
+    const { token } = useAuth();
 
     const deleting = () => {
         setDeleteWarn(true);
     };
 
     const onDelete = async () => {
-        console.warn(
-            "trying to delete resource id",
-            id,
-            "with BEARER TOKEN:",
-            token
-        );
+        console.warn("trying to delete resource (", resource, ") id", id);
         const options = {
             method: "DELETE",
             url: `/${resource}/${id}`,
@@ -29,15 +25,20 @@ export default function DeleteBtn({ resource, id, onDeleteCallBack }) {
 
         try {
             let response = await axios.request(options);
-            console.log("Single resource delete api response:", response.data);
+            // console.log("Single resource (", resource ,") delete api response:", response);
+            console.log("successfully deleted", resource, "/", id);
+            toast.success("successfully deleted");
             if (onDeleteCallBack) {
                 onDeleteCallBack(id);
             }
         } catch (err) {
             console.error("Delete error", err);
+            toast.error(err.response?.data?.message);
+            setDeleteWarn(false);
         }
     };
 
+    // TODO: Need to restyle
     return !deleteWarn ? (
         <Button
             className="cursor-pointer text-red-800 hover:text-red-600 hover:border-red-600"

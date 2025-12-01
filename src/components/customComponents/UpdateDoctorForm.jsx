@@ -37,34 +37,61 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useNavigate, useParams, useLocation } from "react-router";
 
-export default function DoctorCreateForm() {
-    const [dobWindowOpen, setDobWindowOpen] = useState(false);
-    const [performers, setPerformers] = useState([]);
+export default function DoctorUpdateForm() {
+    const { token } = useAuth();
+    const navigate = useNavigate();
+    const { id } = useParams();
 
-    useEffect(() => {
-        const fetchPerformers = async () => {
-            const options = {
-                method: "POST",
-                url: "/doctors",
-            };
-            try {
-                let response = await axios.request(options);
-                console.log("performers data:", response.data);
-                setPerformers(response.data);
-            } catch (error) {
-                console.log(error);
-            }
+    const location = useLocation();
+    const doctor = location.state?.doctor;
+    console.log("doctor in doctoredit:", doctor);
+
+    const createDoctor = async (formData) => {
+        console.log("data in createDoctor:", formData);
+        const options = {
+            method: "PATCH",
+            url: `/doctors/${id}`,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            data: formData,
         };
-        fetchPerformers();
-    }, []);
+
+        try {
+            let response = await axios.request(options);
+            console.log("Single doctor update api response:", response.data);
+            navigate("/doctors", {
+                state: {
+                    type: "success",
+                    message: `Doctor "${response.data.first_name}" updated!`,
+                },
+            });
+        } catch (err) {
+            console.error("error updating doctor:", err);
+            console.error("error response data:", err.response?.data);
+            console.error("error response status:", err.response?.status);
+            toast.error(
+                err.response?.data?.message,
+                "Error",
+                err.response?.status ||
+                    "Failed to update doctor. Please try again."
+            );
+        }
+    };
 
     const formSchema = z.object({
-        email: z.email(),
+        email: z.string().email(),
         first_name: z.string(),
         last_name: z.string(),
-        phone: z.number(),
-
+        phone: z
+            .string()
+            .min(10, "Phone number must be at least 10 digits")
+            .max(15, "Phone number must be at most 15 digits")
+            .regex(/^\+?[0-9]{7,15}$/, "Invalid phone number format"),
         specialisation: z.enum([
             "Podiatrist",
             "Dermatologist",
@@ -77,23 +104,18 @@ export default function DoctorCreateForm() {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
-            first_name: "",
-            last_name: "",
-            phone: "",
-            specialisation: "",
+            email: doctor.email,
+            first_name: doctor.first_name,
+            last_name: doctor.last_name,
+            phone: doctor.phone,
+            specialisation: doctor.specialisation,
         },
         mode: "onChange",
     });
 
     const submitForm = (data) => {
         console.log("Form submitted:", data);
-
-        let formattedData = {
-            ...data,
-            dob: data.dob.toISOString().split("T")[0],
-            performer_id: data.performer,
-        };
+        createDoctor(data);
     };
 
     return (
@@ -202,9 +224,7 @@ export default function DoctorCreateForm() {
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>
-                                        Specialisation (Enums)
-                                    </FieldLabel>
+                                    <FieldLabel>Specialisation</FieldLabel>
                                     <Select
                                         name={field.name}
                                         onValueChange={field.onChange}

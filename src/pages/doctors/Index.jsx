@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Eye } from "lucide-react";
 import { Pencil } from "lucide-react";
-import DeleteBtn from "@/components/DeleteBtn";
+import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { toast } from "sonner";
 
 // import {
@@ -47,12 +47,26 @@ export default function DoctorsIndex() {
         fetchDoctors();
     }, []);
 
-    const onDeleteCallBack = (id) => {
-        console.log("On Delete Callback called");
-        toast.success("Festival deletes successfully");
-        setDoctors(doctors.filter((doctor) => doctor.id !== id));
+    const deleteDoctor = async (id) => {
+        const options = {
+            method: "GET",
+            url: "/doctors",
+        };
+        try {
+            let response = await axios.request(options);
+            console.log(response.data);
+            setDoctors(doctors.filter((doctor) => doctor.id !== id));
+            toast.success("Doctor deleted successfully");
+        } catch (error) {
+            console.log(error);
+            toast.error("Issue deleting doctor");
+        }
     };
 
+    const onDeleteCallBack = (id) => {
+        console.log("On Delete Callback called with id:", id);
+        setDoctors(doctors.filter((doctor) => doctor.id !== id));
+    };
 
     return (
         <div>
@@ -62,7 +76,7 @@ export default function DoctorsIndex() {
                 </Link>
             </Button>
             <Table>
-                <TableCaption>A list of doctors</TableCaption>
+                {/* <TableCaption>A list of doctors</TableCaption> */}
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
@@ -75,7 +89,9 @@ export default function DoctorsIndex() {
                 <TableBody>
                     {doctors.map((doctor) => (
                         <TableRow key={doctor.id}>
-                            <TableCell>Dr {doctor.first_name} {doctor.last_name}</TableCell>
+                            <TableCell>
+                                Dr {doctor.first_name} {doctor.last_name}
+                            </TableCell>
                             <TableCell>{doctor.specialisation}</TableCell>
                             <TableCell>{doctor.email}</TableCell>
                             <TableCell>{doctor.phone}</TableCell>
@@ -86,9 +102,7 @@ export default function DoctorsIndex() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(
-                                                `/doctors/${doctor.id}`
-                                            )
+                                            navigate(`/doctors/${doctor.id}`)
                                         }
                                     >
                                         <Eye />
@@ -99,7 +113,8 @@ export default function DoctorsIndex() {
                                         size="icon"
                                         onClick={() =>
                                             navigate(
-                                                `/doctors/${doctor.id}/edit`
+                                                `/doctors/${doctor.id}/edit`,
+                                                { state: { doctor } }
                                             )
                                         }
                                     >
