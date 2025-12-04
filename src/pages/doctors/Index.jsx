@@ -102,7 +102,9 @@ export default function DoctorsIndex() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(`/doctors/${doctor.id}`)
+                                            navigate(`/doctors/${doctor.id}`, {
+                                                state: { doctor },
+                                            })
                                         }
                                     >
                                         <Eye />
