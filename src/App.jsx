@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
 
 import { AuthProvidor, useAuth } from "./hooks/useAuth";
+import { HeaderProvider } from "@/context/HeaderContext";
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
@@ -80,11 +81,11 @@ function AppLayout() {
             ) : (
                 // HAS TOKEN: Normal layout WITH SiteHeader
                 <SidebarInset>
-                    <SiteHeader />
+                    <div className="flex flex-1 flex-col p-4">
+                        <SiteHeader />
 
-                    <div className="flex flex-1 flex-col p-2">
                         <div className="@container/main flex flex-1 flex-col gap-2">
-                            <div className="flex flex-col gap-4 md:gap-6">
+                            <div className="flex flex-col gap-4 md:gap-6 flex-1">
                                 <Routes>
                                     {/* <Route path="/" element={<Home />} /> */}
                                     <Route
@@ -131,7 +132,9 @@ export default function App() {
     return (
         <Router>
             <AuthProvidor>
-                <AppLayout />
+                <HeaderProvider>
+                    <AppLayout />
+                </HeaderProvider>
             </AuthProvidor>
         </Router>
     );
