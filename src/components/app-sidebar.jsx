@@ -140,6 +140,7 @@ export function AppSidebar({ ...props }) {
                                 websites with React.
                             </p>
                         </div>
+                        {/* TODO: add loading state for login button (open the loginform component)*/}
                         <LoginForm />
                     </div>
                 )}

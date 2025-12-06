@@ -20,14 +20,20 @@ import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
+import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
 import { toast } from "sonner";
+
 
 export default function DoctorShow() {
     const { id } = useParams();
     const { token } = useAuth();
     const { setHeaderContent } = useContext(HeaderContext);
     const [doctor, setDoctor] = useState(null);
+    const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState("appointments");
+    const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+
     useEffect(() => {
         console.warn("No doctor in navigation state, calling API...");
 
@@ -94,8 +100,9 @@ export default function DoctorShow() {
                 setDoctor({
                     ...doctorRes.data,
                     appointments: appointmentsWithPatients,
-                    prescriptions: filteredPrescriptions,
+                    prescriptions: prescriptionsWithPatients,
                 });
+                setPatients(patientsRes.data);
                 setLoading(false);
             } catch (error) {
                 console.log(error);
@@ -129,21 +136,68 @@ export default function DoctorShow() {
         return <h1>LOADING</h1>;
     }
 
+    const onCreateCallback = (newAppointment) => {
+        console.log("OnCreateCallback Pinged in doctors", newAppointment);
+
+        const patient = patients.find(
+            (p) => p.id === newAppointment.patient_id
+        );
+        const patientName = patient
+            ? `${patient.first_name} ${patient.last_name}`
+            : "Unknown";
+
+        setDoctor({
+            ...doctor,
+            appointments: [
+                ...doctor.appointments,
+                {
+                    ...newAppointment,
+                    patient_name: patientName,
+                    appointment_date: Math.floor(
+                        new Date(newAppointment.appointment_date).getTime() /
+                            1000
+                    ),
+                },
+            ],
+        });
+
+        setShowAppointmentForm(false);
+    };
+
     console.table("doctor in individual show:", doctor);
     return (
         <div className="flex flex-col h-full gap-4">
-            <Tabs defaultValue="account" className="flex-1">
-                <TabsList className="flex!">
-                    <TabsTrigger
-                        value="account"
-                        className="data-[state=active]:bg-blue-300!"
-                    >
-                        Appointments
-                    </TabsTrigger>
-                    <TabsTrigger value="password">Prescriptions</TabsTrigger>
-                </TabsList>
+            <Tabs
+                defaultValue="appointments"
+                className="flex-1"
+                onValueChange={setActiveTab}
+            >
+                <div className="flex justify-between items-center">
+                    <TabsList className="flex!">
+                        <TabsTrigger
+                            value="appointments"
+                            className="data-[state=active]:bg-blue-300!"
+                        >
+                            Appointments
+                        </TabsTrigger>
+                        <TabsTrigger value="prescriptions">
+                            Prescriptions
+                        </TabsTrigger>
+                    </TabsList>
+                    {activeTab === "appointments" && (
+                        <button
+                            onClick={() => setShowAppointmentForm(true)}
+                            className="p-2 px-3 border rounded-md cursor-pointer hover:bg-gray-50 active:scale-95 active:text-gray-600 transition-all "
+                        >
+                            <p className="font-medium">New Appointment</p>
+                        </button>
+                    )}
+                    {activeTab === "prescriptions" && (
+                        <h1>Add new Prescription</h1>
+                    )}
+                </div>
                 <div className="h-full bg-gray-100 rounded-lg">
-                    <TabsContent value="account" className=" h-full">
+                    <TabsContent value="appointments" className=" h-full">
                         <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
                             {/* <TableHeader>
                                 <TableRow>
@@ -209,7 +263,7 @@ export default function DoctorShow() {
                             </TableBody>
                         </Table>
                     </TabsContent>
-                    <TabsContent value="password" className="h-full">
+                    <TabsContent value="prescriptions" className="h-full">
                         <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
                             <TableBody>
                                 {doctor.prescriptions?.map((prescription) => (
@@ -282,6 +336,25 @@ export default function DoctorShow() {
                     </TabsContent>
                 </div>
             </Tabs>
+
+            {showAppointmentForm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setShowAppointmentForm(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="animate-in zoom-in-95 duration-200"
+                    >
+                        <AppointmentCreateForm
+                            doctor={doctor}
+                            patients={patients}
+                            onCreateCallback={onCreateCallback}
+                            setShowAppointmentForm={setShowAppointmentForm}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

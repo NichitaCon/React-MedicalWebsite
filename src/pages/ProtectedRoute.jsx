@@ -8,10 +8,10 @@ export default function ProtectedRoute() {
         return (
             <Navigate
                 to={"/"}
-                state={{
-                    message: "You must be logged in to access this page",
-                    type: "error",
-                }}
+                // state={{
+                //     message: "You must be logged in to access this page",
+                //     type: "error",
+                // }}
             />
         );
     }

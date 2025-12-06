@@ -16,6 +16,7 @@ import DoctorsEdit from "./pages/doctors/Edit";
 import DoctorsCreate from "./pages/doctors/Create";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import FormExamples from "@/pages/examples/Forms";
+import AppointmentsCreate from "./pages/appointments/Create";
 
 // Main layout component
 function AppLayout() {
@@ -38,9 +39,11 @@ function AppLayout() {
             />
 
             {/* AppSideBar is the boring old sidebar */}
-            <AppSidebar 
-                variant="inset" 
-                className={`transition-all duration-500 ${token ? '' : '!pr-3'}`}
+            <AppSidebar
+                variant="inset"
+                className={`transition-all duration-500 ${
+                    token ? "" : "!pr-3"
+                }`}
             />
 
             {!token ? (
@@ -63,6 +66,7 @@ function AppLayout() {
                                         path="/"
                                         element={<ProtectedRoute />}
                                     >
+                                        {/* Doctors */}
                                         <Route
                                             path="/doctors"
                                             element={<DoctorsIndex />}
@@ -78,6 +82,13 @@ function AppLayout() {
                                         <Route
                                             path="/doctors/create"
                                             element={<DoctorsCreate />}
+                                        />
+
+                                        {/* Appointments */}
+
+                                        <Route
+                                            path="/appointments/create"
+                                            element={<AppointmentsCreate />}
                                         />
                                     </Route>
                                     <Route
@@ -122,6 +133,12 @@ function AppLayout() {
                                         <Route
                                             path="/doctors/create"
                                             element={<DoctorsCreate />}
+                                        />
+                                        {/* Appointments */}
+
+                                        <Route
+                                            path="/appointments/create"
+                                            element={<AppointmentsCreate />}
                                         />
                                     </Route>
                                     <Route

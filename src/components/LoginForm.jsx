@@ -128,6 +128,8 @@ export default function LoginForm() {
                             <p className="text-blue-600">Create an account</p>
                         </div>
                         {/* Footer Section */}
+
+                        {/* TODO: add spinner while signing in */}
                         <button
                             form="login-form-example"
                             type="submit"
