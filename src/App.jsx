@@ -81,7 +81,7 @@ function AppLayout() {
             ) : (
                 // HAS TOKEN: Normal layout WITH SiteHeader
                 <SidebarInset>
-                    <div className="flex flex-1 flex-col p-4">
+                    <div className="flex flex-1 flex-col p-3">
                         <SiteHeader />
 
                         <div className="@container/main flex flex-1 flex-col gap-2">
