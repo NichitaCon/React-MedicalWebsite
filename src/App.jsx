@@ -25,12 +25,23 @@ function AppLayout() {
     return (
         <SidebarProvider
             style={{
-                "--sidebar-width": token ? "calc(var(--spacing) * 82)" : "30vw",
+                "--sidebar-width": token ? "calc(var(--spacing) * 82)" : "25vw",
                 "--header-height": "calc(var(--spacing) * 12)",
             }}
+            className="relative bg-sidebar"
         >
+            {/* Gradient overlay that fades out when logged in */}
+            <div
+                className={`absolute inset-0 bg-black transition-opacity duration-500 pointer-events-none ${
+                    token ? "opacity-0" : "opacity-100"
+                }`}
+            />
+
             {/* AppSideBar is the boring old sidebar */}
-            <AppSidebar variant="inset" />
+            <AppSidebar 
+                variant="inset" 
+                className={`transition-all duration-500 ${token ? '' : '!pr-3'}`}
+            />
 
             {!token ? (
                 // NO TOKEN: Show background image, NO SiteHeader

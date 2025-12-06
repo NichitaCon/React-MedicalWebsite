@@ -129,7 +129,7 @@ export function AppSidebar({ ...props }) {
                 ) : (
                     <div className="p-4 flex flex-col justify-between h-full">
                         <div>
-                            <h1 className="text-4xl font-semibold mb-2">
+                            <h1 className="text-5xl font-semibold mb-2">
                                 Welcome to MedApi
                             </h1>
                             <p>
