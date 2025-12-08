@@ -17,12 +17,12 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, PencilIcon } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
 import { toast } from "sonner";
-
+import EditAppointmentDateCard from "@/components/customComponents/EditAppointmentDateCard";
 
 export default function DoctorShow() {
     const { id } = useParams();
@@ -33,6 +33,7 @@ export default function DoctorShow() {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("appointments");
     const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+    const [editingAppointmentId, setEditingAppointmentId] = useState(null);
 
     useEffect(() => {
         console.warn("No doctor in navigation state, calling API...");
@@ -244,18 +245,30 @@ export default function DoctorShow() {
                                                         ).toLocaleDateString()}
                                                     </p>
                                                 </div>
-                                                <Button
-                                                    className="cursor-pointer hover:border-blue-500"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/appointments/${appointment.id}`
-                                                        )
-                                                    }
-                                                >
-                                                    <Eye />
-                                                </Button>
+                                                
+                                                <div className="relative">
+                                                    <Button
+                                                        className="cursor-pointer hover:border-blue-500"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            setEditingAppointmentId(
+                                                                editingAppointmentId === appointment.id ? null : appointment.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <PencilIcon />
+                                                    </Button>
+
+                                                    {editingAppointmentId === appointment.id && (
+                                                        <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
+                                                            <EditAppointmentDateCard
+                                                                appointment_date={appointment.appointment_date}
+                                                                setEditingAppointmentId={setEditingAppointmentId}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </TableCell>
                                     </TableRow>

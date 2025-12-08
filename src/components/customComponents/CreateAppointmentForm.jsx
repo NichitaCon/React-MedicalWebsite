@@ -4,7 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, CheckIcon, ChevronsUpDownIcon, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,18 +28,27 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 import { Input } from "../ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 
 export default function AppointmentCreateForm({ doctor, onCreateCallback, setShowAppointmentForm }) {
     const { token } = useAuth();
     const navigate = useNavigate();
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
+    const [patientOpen, setPatientOpen] = useState(false);
+    const [doctorOpen, setDoctorOpen] = useState(false);
     const location = useLocation();
     console.log("Location in appointmentForm", location);
 
@@ -151,32 +160,58 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                 name="doctor_id"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <Field>
+                                    <Field className="flex flex-col">
                                         <FieldLabel>Doctor</FieldLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value}
-                                        >
-                                            <SelectTrigger
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select a doctor" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {doctors.map((doctor) => (
-                                                    <SelectItem
-                                                        key={doctor.id}
-                                                        value={doctor.id.toString()}
-                                                    >
-                                                        Dr. {doctor.first_name}{" "}
-                                                        {doctor.last_name} -{" "}
-                                                        {doctor.specialisation}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={doctorOpen} onOpenChange={setDoctorOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={doctorOpen}
+                                                    className={cn(
+                                                        "w-full justify-between",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value
+                                                        ? doctors.find((d) => d.id.toString() === field.value)
+                                                            ? `Dr. ${doctors.find((d) => d.id.toString() === field.value).first_name} ${doctors.find((d) => d.id.toString() === field.value).last_name}`
+                                                            : "Select a doctor"
+                                                        : "Select a doctor"}
+                                                    <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Search doctor..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>No doctor found.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {doctors.map((doctor) => (
+                                                                <CommandItem
+                                                                    key={doctor.id}
+                                                                    value={`${doctor.first_name} ${doctor.last_name} ${doctor.specialisation}`}
+                                                                    onSelect={() => {
+                                                                        field.onChange(doctor.id.toString());
+                                                                        setDoctorOpen(false);
+                                                                    }}
+                                                                >
+                                                                    <CheckIcon
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            field.value === doctor.id.toString()
+                                                                                ? "opacity-100"
+                                                                                : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialisation}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                         {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
@@ -192,29 +227,64 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                             name="patient_id"
                             control={form.control}
                             render={({ field, fieldState }) => (
-                                <Field>
+                                <Field className="flex flex-col">
                                     <FieldLabel>Patient</FieldLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                    >
-                                        <SelectTrigger
-                                            aria-invalid={fieldState.invalid}
-                                        >
-                                            <SelectValue placeholder="Select a patient" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {patients.map((patient) => (
-                                                <SelectItem
-                                                    key={patient.id}
-                                                    value={patient.id.toString()}
-                                                >
-                                                    {patient.first_name}{" "}
-                                                    {patient.last_name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Popover open={patientOpen} onOpenChange={setPatientOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={patientOpen}
+                                                className={cn(
+                                                    "w-full justify-between",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {field.value
+                                                    ? patients.find(
+                                                          (patient) =>
+                                                              patient.id.toString() ===
+                                                              field.value
+                                                      )?.first_name + " " + patients.find(
+                                                          (patient) =>
+                                                              patient.id.toString() ===
+                                                              field.value
+                                                      )?.last_name
+                                                    : "Select a patient"}
+                                                <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Search patient..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No patient found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {patients.map((patient) => (
+                                                            <CommandItem
+                                                                key={patient.id}
+                                                                value={`${patient.first_name} ${patient.last_name}`}
+                                                                onSelect={() => {
+                                                                    field.onChange(patient.id.toString());
+                                                                    setPatientOpen(false);
+                                                                }}
+                                                            >
+                                                                <CheckIcon
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        field.value === patient.id.toString()
+                                                                            ? "opacity-100"
+                                                                            : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {patient.first_name} {patient.last_name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
                                     {fieldState.invalid && (
                                         <FieldError
                                             errors={[fieldState.error]}
