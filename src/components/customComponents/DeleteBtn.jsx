@@ -27,7 +27,9 @@ export default function DeleteBtn({ resource, id, onDeleteCallBack }) {
             let response = await axios.request(options);
             // console.log("Single resource (", resource ,") delete api response:", response);
             console.log("successfully deleted", resource, "/", id);
-            toast.success("successfully deleted");
+            const resourceName = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+            const capitalizedName = resourceName.charAt(0).toUpperCase() + resourceName.slice(1);
+            toast.success(`${capitalizedName} successfully deleted `);
             if (onDeleteCallBack) {
                 onDeleteCallBack(id);
             }
@@ -41,7 +43,7 @@ export default function DeleteBtn({ resource, id, onDeleteCallBack }) {
     // TODO: Need to restyle
     return !deleteWarn ? (
         <Button
-            className="cursor-pointer text-red-800 hover:text-red-600 hover:border-red-600"
+            className="cursor-pointer text-red-500 hover:text-red-600 hover:border-red-600"
             variant="outline"
             size="icon"
             onClick={deleting}
@@ -55,7 +57,7 @@ export default function DeleteBtn({ resource, id, onDeleteCallBack }) {
                 variant="outline"
                 size="sm"
                 onClick={onDelete}
-                className="text-red-600 border-red-300 bg-red-500 hover:bg-red-600 hover:text-red-500"
+                className="hover:border-red-600"
             >
                 Yes
             </Button>

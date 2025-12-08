@@ -36,9 +36,9 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export default function EditAppointmentDateCard({
-    appointment_date,
+    appointment,
     setEditingAppointmentId,
-    onCreateCallback,
+    onUpdateCallBack,
     setShowAppointmentForm,
 }) {
     const { token } = useAuth();
@@ -69,19 +69,17 @@ export default function EditAppointmentDateCard({
     //     fetchData();
     // }, []);
 
-    const createAppointment = async (formData) => {
-        // Convert string IDs to numbers and date to ISO string
+    const updateAppointment = async (formData) => {
+        // Only update the appointment date
         const payload = {
             appointment_date: formData.appointment_date.toISOString(),
-            doctor_id: parseInt(formData.doctor_id),
-            patient_id: parseInt(formData.patient_id),
         };
 
-        console.log("Creating appointment with payload:", payload);
+        console.log("Updating appointment with payload:", payload);
 
         const options = {
-            method: "POST",
-            url: `/appointments`,
+            method: "PATCH",
+            url: `/appointments/${appointment.id}`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -90,12 +88,12 @@ export default function EditAppointmentDateCard({
 
         try {
             let response = await axios.request(options);
-            console.log("Appointment created:", response.data);
-            toast.success("Appointment created successfully");
+            console.log("Updated created:", response.data);
+            toast.success("Appointment updated successfully");
 
             // Call the callback with the new appointment data if provided
-            if (onCreateCallback) {
-                onCreateCallback(payload);
+            if (onUpdateCallBack) {
+                onUpdateCallBack({ id: appointment.id, payload });
             }
         } catch (err) {
             console.error("error creating appointment:", err);
@@ -107,20 +105,21 @@ export default function EditAppointmentDateCard({
 
     const formSchema = z.object({
         appointment_date: z.date({
-            error: "Please select a date",
+            required_error: "Please select a date",
         }),
     });
+    console.log("Appointment date passed in prop:", appointment.appointment_date)
 
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            appointment_date: appointment_date
+            appointment_date: new Date(appointment.appointment_date * 1000)
         },
         mode: "onSubmit",
     });
 
     const submitForm = (data) => {
-        createAppointment(data);
+        updateAppointment(data);
     };
 
     return (

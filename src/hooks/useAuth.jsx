@@ -41,7 +41,10 @@ export const AuthProvidor = ({ children }) => {
                 "error logging in",
                 err.response?.data || err.message
             );
-            return { success: false, msg: err.response?.data?.error || "Login failed" };
+            return {
+                success: false,
+                msg: err.response?.data?.error || "Login failed",
+            };
         }
     };
 

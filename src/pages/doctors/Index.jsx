@@ -96,7 +96,7 @@ export default function DoctorsIndex() {
                             <TableCell>{doctor.email}</TableCell>
                             <TableCell>{doctor.phone}</TableCell>
                             <TableCell>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 text-right justify-end">
                                     <Button
                                         className="cursor-pointer hover:border-blue-500"
                                         variant="outline"

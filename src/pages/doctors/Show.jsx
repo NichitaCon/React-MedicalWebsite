@@ -17,7 +17,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, PencilIcon } from "lucide-react";
+import { Eye, PencilIcon, Trash } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
@@ -165,6 +165,46 @@ export default function DoctorShow() {
         setShowAppointmentForm(false);
     };
 
+    const onUpdateCallBack = (updatedAppointment) => {
+        console.log(
+            "onUpdateCallBack called with payload:",
+            updatedAppointment
+        );
+
+        // console.log(
+        //     "math logic in onUpdateCallback:",
+        //     Math.floor(
+        //         new Date(updatedAppointment.payload.appointment_date).getTime() / 1000
+        //     )
+        // );
+
+        setDoctor({
+            ...doctor,
+            appointments: doctor.appointments.map((appt) =>
+                appt.id === editingAppointmentId
+                    ? {
+                          ...appt,
+                          appointment_date: Math.floor(
+                              new Date(
+                                  updatedAppointment.payload.appointment_date
+                              ).getTime() / 1000
+                          ),
+                      }
+                    : appt
+            ),
+        });
+    };
+
+    const onDeleteCallBack = (id) => {
+        console.log("On Delete Callback called with id:", id);
+        setDoctor({
+            ...doctor,
+            appointments: doctor.appointments.filter(
+                (appointment) => appointment.id !== id
+            ),
+        });
+    };
+
     console.table("doctor in individual show:", doctor);
     return (
         <div className="flex flex-col h-full gap-4">
@@ -245,7 +285,7 @@ export default function DoctorShow() {
                                                         ).toLocaleDateString()}
                                                     </p>
                                                 </div>
-                                                
+
                                                 <div className="relative">
                                                     <Button
                                                         className="cursor-pointer hover:border-blue-500"
@@ -253,22 +293,40 @@ export default function DoctorShow() {
                                                         size="icon"
                                                         onClick={() =>
                                                             setEditingAppointmentId(
-                                                                editingAppointmentId === appointment.id ? null : appointment.id
+                                                                editingAppointmentId ===
+                                                                    appointment.id
+                                                                    ? null
+                                                                    : appointment.id
                                                             )
                                                         }
                                                     >
                                                         <PencilIcon />
                                                     </Button>
 
-                                                    {editingAppointmentId === appointment.id && (
+                                                    {editingAppointmentId ===
+                                                        appointment.id && (
                                                         <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
                                                             <EditAppointmentDateCard
-                                                                appointment_date={appointment.appointment_date}
-                                                                setEditingAppointmentId={setEditingAppointmentId}
+                                                                appointment={
+                                                                    appointment
+                                                                }
+                                                                setEditingAppointmentId={
+                                                                    setEditingAppointmentId
+                                                                }
+                                                                onUpdateCallBack={
+                                                                    onUpdateCallBack
+                                                                }
                                                             />
                                                         </div>
                                                     )}
                                                 </div>
+                                                <DeleteBtn
+                                                    resource="appointments"
+                                                    id={appointment.id}
+                                                    onDeleteCallBack={
+                                                        onDeleteCallBack
+                                                    }
+                                                />
                                             </div>
                                         </TableCell>
                                     </TableRow>
