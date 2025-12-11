@@ -23,6 +23,7 @@ import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
 import { toast } from "sonner";
 import EditAppointmentDateCard from "@/components/customComponents/EditAppointmentDateCard";
+import CreateDiagnosisForm from "@/components/customComponents/CreateDiagnosisForm";
 
 export default function DoctorShow() {
     const { id } = useParams();
@@ -33,6 +34,9 @@ export default function DoctorShow() {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("appointments");
     const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+    const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+    const [showDiagnosisForm, setShowDiagnosisForm] = useState(false);
+
     const [editingAppointmentId, setEditingAppointmentId] = useState(null);
 
     useEffect(() => {
@@ -46,6 +50,7 @@ export default function DoctorShow() {
                     appointmentsRes,
                     prescriptionsRes,
                     patientsRes,
+                    diagnosisRes,
                 ] = await Promise.all([
                     axios.get(`/doctors/${id}`, {
                         headers: { Authorization: `Bearer ${token}` },
@@ -59,6 +64,9 @@ export default function DoctorShow() {
                     axios.get(`/patients`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
+                    axios.get(`/diagnoses`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
                 ]);
 
                 const filteredAppointments = appointmentsRes.data.filter(
@@ -68,6 +76,17 @@ export default function DoctorShow() {
                 const filteredPrescriptions = prescriptionsRes.data.filter(
                     (prescription) => prescription.doctor_id == id
                 );
+
+                const diagnosisIdsFromPrescriptions = filteredPrescriptions.map(
+                    (prescription) => prescription.diagnosis_id
+                );
+                // console.log("diagnosisIdsFromPrescriptions:", diagnosisIdsFromPrescriptions)
+
+                const filteredDiagnoses = diagnosisRes.data.filter(
+                    (diagnosis) => diagnosisIdsFromPrescriptions.includes(diagnosis.id)
+                );
+
+                console.log("filteredDiagnosis:", filteredDiagnoses)
 
                 // Map appointments to include patient name
                 const appointmentsWithPatients = filteredAppointments.map(
@@ -98,10 +117,28 @@ export default function DoctorShow() {
                     }
                 );
 
+                const diagnosesWithPatients = filteredDiagnoses.map(
+                    (diagnosis) => {
+                        const patient = patientsRes.data.find(
+                            (patient) => patient.id === diagnosis.patient_id
+                        );
+                        return {
+                            ...diagnosis,
+                            patient_name: patient
+                                ? `${patient.first_name} ${patient.last_name}`
+                                : "Unknown",
+                        };
+                    }
+                );
+
+                console.log("filteredDiagnosisnames:", diagnosesWithPatients)
+
+
                 setDoctor({
                     ...doctorRes.data,
                     appointments: appointmentsWithPatients,
                     prescriptions: prescriptionsWithPatients,
+                    diagnoses: diagnosesWithPatients,
                 });
                 setPatients(patientsRes.data);
                 setLoading(false);
@@ -224,6 +261,7 @@ export default function DoctorShow() {
                         <TabsTrigger value="prescriptions">
                             Prescriptions
                         </TabsTrigger>
+                        <TabsTrigger value="diagnoses">Diagnoses</TabsTrigger>
                     </TabsList>
                     {activeTab === "appointments" && (
                         <button
@@ -234,7 +272,20 @@ export default function DoctorShow() {
                         </button>
                     )}
                     {activeTab === "prescriptions" && (
-                        <h1>Add new Prescription</h1>
+                        <button
+                            onClick={() => setShowPrescriptionForm(true)}
+                            className="p-2 px-3 border rounded-md cursor-pointer hover:bg-gray-50 active:scale-95 active:text-gray-600 transition-all "
+                        >
+                            <p className="font-medium">New Prescription</p>
+                        </button>
+                    )}
+                    {activeTab === "diagnoses" && (
+                        <button
+                            onClick={() => setShowPrescriptionForm(true)}
+                            className="p-2 px-3 border rounded-md cursor-pointer hover:bg-gray-50 active:scale-95 active:text-gray-600 transition-all "
+                        >
+                            <p className="font-medium">New Diagnosis</p>
+                        </button>
                     )}
                 </div>
                 <div className="h-full bg-gray-100 rounded-lg">
@@ -405,6 +456,102 @@ export default function DoctorShow() {
                             </TableBody>
                         </Table>
                     </TabsContent>
+                    <TabsContent value="diagnoses" className=" h-full">
+                        <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
+                            {/* <TableHeader>
+                                <TableRow>
+                                    <TableHead>Appointment ID</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Patient ID</TableHead>
+                                    <TableHead>Created</TableHead>
+                                    <TableHead></TableHead>
+                                </TableRow>
+                            </TableHeader> */}
+                            <TableBody>
+                                {doctor.diagnoses?.map((diagnosis) => (
+                                    <TableRow key={diagnosis.id}>
+                                        <TableCell className="bg-white rounded-l-sm">
+                                            <div>
+                                                <p className="text-sm text-gray-500">
+                                                    Patient:
+                                                </p>
+                                                <p className="text-xl font-medium">
+                                                    {diagnosis.patient_name}
+                                                </p>
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="bg-white rounded-r-sm text-right">
+                                            <div className="flex gap-2 justify-end items-center">
+                                                <div className="flex flex-col text-right">
+                                                    <p className="text-blue-600 font-medium">
+                                                        {new Date(
+                                                            diagnosis.diagnosis_date *
+                                                                1000
+                                                        ).toLocaleTimeString(
+                                                            [],
+                                                            {
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            }
+                                                        )}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500">
+                                                        {new Date(
+                                                            diagnosis.diagnosis_date *
+                                                                1000
+                                                        ).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+
+                                                <div className="relative">
+                                                    <Button
+                                                        className="cursor-pointer hover:border-blue-500"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            setEditingAppointmentId(
+                                                                editingAppointmentId ===
+                                                                    appointment.id
+                                                                    ? null
+                                                                    : appointment.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <PencilIcon />
+                                                    </Button>
+
+                                                    {editingAppointmentId ===
+                                                        diagnosis.id && (
+                                                        <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
+                                                            <EditAppointmentDateCard
+                                                                diagnosis={
+                                                                    diagnosis
+                                                                }
+                                                                setEditingAppointmentId={
+                                                                    setEditingAppointmentId
+                                                                }
+                                                                onUpdateCallBack={
+                                                                    onUpdateCallBack
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DeleteBtn
+                                                    resource="diagnoses"
+                                                    id={diagnosis.id}
+                                                    onDeleteCallBack={
+                                                        onDeleteCallBack
+                                                    }
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TabsContent>
                 </div>
             </Tabs>
 
@@ -422,6 +569,42 @@ export default function DoctorShow() {
                             patients={patients}
                             onCreateCallback={onCreateCallback}
                             setShowAppointmentForm={setShowAppointmentForm}
+                        />
+                    </div>
+                </div>
+            )}
+            {showPrescriptionForm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setShowPrescriptionForm(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="animate-in zoom-in-95 duration-200"
+                    >
+                        <AppointmentCreateForm
+                            doctor={doctor}
+                            patients={patients}
+                            onCreateCallback={onCreateCallback}
+                            setShowAppointmentForm={setShowAppointmentForm}
+                        />
+                    </div>
+                </div>
+            )}
+            {showDiagnosisForm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setShowDiagnosisForm(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="animate-in zoom-in-95 duration-200"
+                    >
+                        <CreateDiagnosisForm
+                            doctor={doctor}
+                            patients={patients}
+                            onCreateCallback={onCreateCallback}
+                            setShowAppointmentForm={setShowDiagnosisForm}
                         />
                     </div>
                 </div>
