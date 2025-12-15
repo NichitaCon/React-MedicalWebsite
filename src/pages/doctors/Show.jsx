@@ -83,10 +83,11 @@ export default function DoctorShow() {
                 // console.log("diagnosisIdsFromPrescriptions:", diagnosisIdsFromPrescriptions)
 
                 const filteredDiagnoses = diagnosisRes.data.filter(
-                    (diagnosis) => diagnosisIdsFromPrescriptions.includes(diagnosis.id)
+                    (diagnosis) =>
+                        diagnosisIdsFromPrescriptions.includes(diagnosis.id)
                 );
 
-                console.log("filteredDiagnosis:", filteredDiagnoses)
+                console.log("filteredDiagnosis:", filteredDiagnoses);
 
                 // Map appointments to include patient name
                 const appointmentsWithPatients = filteredAppointments.map(
@@ -131,8 +132,7 @@ export default function DoctorShow() {
                     }
                 );
 
-                console.log("filteredDiagnosisnames:", diagnosesWithPatients)
-
+                console.log("filteredDiagnosisnames:", diagnosesWithPatients);
 
                 setDoctor({
                     ...doctorRes.data,
@@ -232,6 +232,32 @@ export default function DoctorShow() {
         });
     };
 
+    const onDiagnosisCreateCallback = (newDiagnosis) => {
+        const patient = patients.find(
+            (p) => p.id === newDiagnosis.patient_id
+        );
+        const patientName = patient
+            ? `${patient.first_name} ${patient.last_name}`
+            : "Unknown";
+
+        setDoctor({
+            ...doctor,
+            diagnoses: [
+                ...doctor.diagnoses,
+                {
+                    ...newDiagnosis,
+                    patient_name: patientName,
+                    diagnosis_date: Math.floor(
+                        new Date(newDiagnosis.diagnosis_date).getTime() /
+                            1000
+                    ),
+                },
+            ],
+        });
+
+        setShowDiagnosisForm(false);
+    };
+
     const onDeleteCallBack = (id) => {
         console.log("On Delete Callback called with id:", id);
         setDoctor({
@@ -281,7 +307,7 @@ export default function DoctorShow() {
                     )}
                     {activeTab === "diagnoses" && (
                         <button
-                            onClick={() => setShowPrescriptionForm(true)}
+                            onClick={() => setShowDiagnosisForm(true)}
                             className="p-2 px-3 border rounded-md cursor-pointer hover:bg-gray-50 active:scale-95 active:text-gray-600 transition-all "
                         >
                             <p className="font-medium">New Diagnosis</p>
@@ -289,6 +315,8 @@ export default function DoctorShow() {
                     )}
                 </div>
                 <div className="h-full bg-gray-100 rounded-lg">
+                    {/* APPOINTMENTS */}
+
                     <TabsContent value="appointments" className=" h-full">
                         <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
                             {/* <TableHeader>
@@ -385,6 +413,9 @@ export default function DoctorShow() {
                             </TableBody>
                         </Table>
                     </TabsContent>
+
+                    {/* PRESCRIPTIONS */}
+
                     <TabsContent value="prescriptions" className="h-full">
                         <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
                             <TableBody>
@@ -456,6 +487,9 @@ export default function DoctorShow() {
                             </TableBody>
                         </Table>
                     </TabsContent>
+
+                    {/* DIAGNOSES */}
+
                     <TabsContent value="diagnoses" className=" h-full">
                         <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
                             {/* <TableHeader>
@@ -477,6 +511,17 @@ export default function DoctorShow() {
                                                 </p>
                                                 <p className="text-xl font-medium">
                                                     {diagnosis.patient_name}
+                                                </p>
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="bg-white rounded-l-sm">
+                                            <div>
+                                                <p className="text-sm text-gray-500">
+                                                    Condition:
+                                                </p>
+                                                <p className="text-xl font-medium">
+                                                    {diagnosis.condition}
                                                 </p>
                                             </div>
                                         </TableCell>
@@ -603,8 +648,8 @@ export default function DoctorShow() {
                         <CreateDiagnosisForm
                             doctor={doctor}
                             patients={patients}
-                            onCreateCallback={onCreateCallback}
-                            setShowAppointmentForm={setShowDiagnosisForm}
+                            onCreateCallback={onDiagnosisCreateCallback}
+                            setShowDiagnosisForm={setShowDiagnosisForm}
                         />
                     </div>
                 </div>

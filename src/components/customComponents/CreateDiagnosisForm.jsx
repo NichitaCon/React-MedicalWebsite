@@ -45,25 +45,17 @@ import { cn } from "@/lib/utils";
 export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowDiagnosisForm }) {
     const { token } = useAuth();
     const navigate = useNavigate();
-    const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
     const [patientOpen, setPatientOpen] = useState(false);
-    const [doctorOpen, setDoctorOpen] = useState(false);
     const location = useLocation();
     console.log("Location in DiagnosisForm", location);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [doctorsRes, patientsRes] = await Promise.all([
-                    axios.get("/doctors", {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    axios.get("/patients", {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                ]);
-                setDoctors(doctorsRes.data);
+                const patientsRes = await axios.get("/patients", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
                 setPatients(patientsRes.data);
             } catch (error) {
                 console.error("Failed to fetch data", error);
@@ -74,11 +66,11 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
     }, []);
 
     const createDiagnosis = async (formData) => {
-        // Convert string IDs to numbers and date to ISO string
+        // Convert patient id to number and date to ISO string
         const payload = {
-            appointment_date: formData.appointment_date.toISOString(),
-            doctor_id: parseInt(formData.doctor_id),
             patient_id: parseInt(formData.patient_id),
+            condition: formData.condition,
+            diagnosis_date: formData.diagnosis_date.toISOString(),
         };
 
         console.log("Creating diagnosis with payload:", payload);
@@ -97,31 +89,32 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
             console.log("Diagnosis created:", response.data);
             toast.success("Diagnosis created successfully");
 
-            // Call the callback with the new appointment data if provided
+            // Call the callback with the new diagnosis data if provided
             if (onCreateCallback) {
-                onCreateCallback(payload);
+                onCreateCallback(response.data || payload);
             }
         } catch (err) {
-            console.error("error creating appointment:", err);
+            console.error("error creating diagnosis:", err);
             toast.error(
-                err.response?.data?.message || "Failed to create appointment"
+                err.response?.data?.message || "Failed to create diagnosis"
             );
         }
     };
 
     const formSchema = z.object({
         diagnosis_date: z.date({
-            error: "Please select a date",
+            required_error: "Please select a date",
         }),
-        doctor_id: z.string().min(1, "Please select a doctor."),
         patient_id: z.string().min(1, "Please select a patient."),
+        condition: z.string().min(1, "Please enter a condition."),
     });
 
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            doctor_id: doctor ? doctor.id.toString() : "",
             patient_id: "",
+            condition: "",
+            diagnosis_date: undefined,
         },
         mode: "onSubmit",
     });
@@ -142,85 +135,28 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
             </CardHeader>
             <CardContent>
                 <form
-                    id="create-appointment-form"
+                    id="create-diagnosis-form"
                     onSubmit={form.handleSubmit(submitForm)}
                 >
                     <div className="flex flex-col gap-6">
-                        {/* Doctor Selection */}
-                        {location.pathname.includes("/doctors") ? (
-                            <div className="">
-                                <p>Doctor:</p>
-                                <h2 className="text-xl">
-                                    {doctor.first_name} {doctor.last_name} -{" "}
-                                    {doctor.specialisation}
-                                </h2>
-                            </div>
-                        ) : (
-                            <Controller
-                                name="doctor_id"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field className="flex flex-col">
-                                        <FieldLabel>Doctor</FieldLabel>
-                                        <Popover open={doctorOpen} onOpenChange={setDoctorOpen}>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={doctorOpen}
-                                                    className={cn(
-                                                        "w-full justify-between",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value
-                                                        ? doctors.find((d) => d.id.toString() === field.value)
-                                                            ? `Dr. ${doctors.find((d) => d.id.toString() === field.value).first_name} ${doctors.find((d) => d.id.toString() === field.value).last_name}`
-                                                            : "Select a doctor"
-                                                        : "Select a doctor"}
-                                                    <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                                <Command>
-                                                    <CommandInput placeholder="Search doctor..." />
-                                                    <CommandList>
-                                                        <CommandEmpty>No doctor found.</CommandEmpty>
-                                                        <CommandGroup>
-                                                            {doctors.map((doctor) => (
-                                                                <CommandItem
-                                                                    key={doctor.id}
-                                                                    value={`${doctor.first_name} ${doctor.last_name} ${doctor.specialisation}`}
-                                                                    onSelect={() => {
-                                                                        field.onChange(doctor.id.toString());
-                                                                        setDoctorOpen(false);
-                                                                    }}
-                                                                >
-                                                                    <CheckIcon
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            field.value === doctor.id.toString()
-                                                                                ? "opacity-100"
-                                                                                : "opacity-0"
-                                                                        )}
-                                                                    />
-                                                                    Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialisation}
-                                                                </CommandItem>
-                                                            ))}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        )}
-                                    </Field>
-                                )}
-                            />
-                        )}
+                        {/* Condition */}
+                        <Controller
+                            name="condition"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field className="flex flex-col">
+                                    <FieldLabel>Condition</FieldLabel>
+                                    <Input
+                                        placeholder="Enter condition"
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                    />
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
+                        />
 
                         {/* Patient Selection */}
                         <Controller
@@ -296,7 +232,7 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
 
                         {/* Date Selection */}
                         <Controller
-                            name="appointment_date"
+                            name="diagnosis_date"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field className="flex flex-col">
@@ -410,7 +346,7 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
                 >
                     Reset
                 </Button>
-                <Button type="submit" form="create-appointment-form">
+                <Button type="submit" form="create-diagnosis-form">
                     Create Diagnosis
                 </Button>
             </CardFooter>
