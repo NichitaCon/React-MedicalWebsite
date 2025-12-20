@@ -16,10 +16,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Toaster } from "../components/ui/sonner";
+import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
 
-export default function LoginForm() {
+export default function LoginForm({setIsLoggingIn}) {
     const { onLogin } = useAuth();
     const navigate = useNavigate();
 
@@ -109,6 +109,7 @@ export default function LoginForm() {
                                         Password
                                     </FieldLabel>
                                     <Input
+                                        className="py-5 px-3"
                                         id="form-example-password"
                                         type="password"
                                         {...field}
@@ -125,7 +126,9 @@ export default function LoginForm() {
                         />
                         <div className="flex gap-2">
                             <p>New to MedApi?</p>
-                            <p className="text-blue-600">Create an account</p>
+                            <button type="button" className="text-blue-600 cursor-pointer" onClick={() => setIsLoggingIn(false)}>
+                                Create new account
+                            </button>
                         </div>
                         {/* Footer Section */}
 

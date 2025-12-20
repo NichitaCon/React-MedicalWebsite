@@ -9,7 +9,6 @@ import { SiteHeader } from "./components/site-header";
 
 // import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
-import Appointments from "@/pages/Appointments";
 import DoctorsIndex from "./pages/doctors/Index";
 import DoctorShow from "./pages/doctors/Show";
 import DoctorsEdit from "./pages/doctors/Edit";
@@ -17,6 +16,7 @@ import DoctorsCreate from "./pages/doctors/Create";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import FormExamples from "@/pages/examples/Forms";
 import AppointmentsCreate from "./pages/appointments/Create";
+import AppointmentsIndex from "./pages/appointments/Index";
 
 // Main layout component
 function AppLayout() {
@@ -86,10 +86,15 @@ function AppLayout() {
 
                                         {/* Appointments */}
 
+                                        {/* <Route
+                                            path="/appointments"
+                                            element={<AppointmentsIndex />}
+                                        />
+
                                         <Route
                                             path="/appointments/create"
                                             element={<AppointmentsCreate />}
-                                        />
+                                        /> */}
                                     </Route>
                                     <Route
                                         path="/forms"
@@ -111,10 +116,6 @@ function AppLayout() {
                                 <Routes>
                                     {/* <Route path="/" element={<Home />} /> */}
                                     <Route
-                                        path="/appointments"
-                                        element={<Appointments />}
-                                    />
-                                    <Route
                                         path="/"
                                         element={<ProtectedRoute />}
                                     >
@@ -135,6 +136,11 @@ function AppLayout() {
                                             element={<DoctorsCreate />}
                                         />
                                         {/* Appointments */}
+
+                                        <Route
+                                            path="/appointments"
+                                            element={<AppointmentsIndex />}
+                                        />
 
                                         <Route
                                             path="/appointments/create"

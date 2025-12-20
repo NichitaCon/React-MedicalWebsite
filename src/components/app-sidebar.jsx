@@ -25,9 +25,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import LoginForm from "./LoginForm";
+import LoginForm from "./customComponents/LoginForm";
+import RegisterForm from "./customComponents/RegisterForm";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
 
 const data = {
     user: {
@@ -74,6 +76,7 @@ const data = {
 export function AppSidebar({ ...props }) {
     const location = useLocation();
     const { token } = useAuth();
+    const [isLoggingIn, setIsLoggingIn] = useState(true);
     console.log("token in AppSidebar() is:", token);
 
     console.log(location);
@@ -141,7 +144,7 @@ export function AppSidebar({ ...props }) {
                             </p>
                         </div>
                         {/* TODO: add loading state for login button (open the loginform component)*/}
-                        <LoginForm />
+                        {isLoggingIn ? <LoginForm setIsLoggingIn={setIsLoggingIn} /> : <RegisterForm setIsLoggingIn={setIsLoggingIn} />}
                     </div>
                 )}
             </Sidebar>

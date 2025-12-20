@@ -17,6 +17,39 @@ export const AuthProvidor = ({ children }) => {
         }
     });
 
+    const onRegister = async (email, password, first_name, last_name) => {
+        console.warn("onRegister Called");
+
+        const options = {
+            method: "POST",
+            url: "/register",
+            data: {
+                email,
+                password,
+                first_name,
+                last_name,
+            },
+        };
+
+        try {
+            let response = await axios.request(options);
+            console.log("register api response:", response.data);
+
+            localStorage.setItem("token", response.data.token);
+            setToken(response.data.token);
+            return { success: true, msg: "Account created!" };
+        } catch (err) {
+            console.error(
+                "error creating account in",
+                err.response?.data || err.message
+            );
+            return {
+                success: false,
+                msg: err.response?.data?.error || "Register failed",
+            };
+        }
+    };
+
     const onLogin = async (email, password) => {
         console.warn("onLogin Called");
 
@@ -57,6 +90,7 @@ export const AuthProvidor = ({ children }) => {
     const value = {
         token,
         onLogin,
+        onRegister,
         onLogOut,
     };
 
