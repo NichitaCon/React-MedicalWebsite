@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 import DoctorCreateForm from "@/components/customComponents/CreateDoctorForm";
-import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
+import AppointmentCreateForm from "@/components/customComponents/CreateEditAppointmentForm";
 
 export default function AppointmentsCreate() {
     return (

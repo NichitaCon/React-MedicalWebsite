@@ -15,6 +15,8 @@ import { Eye } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import CreateEditAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
 
 // import {
 //   Card,
@@ -28,63 +30,181 @@ import { toast } from "sonner";
 
 export default function AppointmentsIndex() {
     const [appointments, setAppointments] = useState([]);
+    const [doctors, setDoctors] = useState([]);
+    const [patients, setPatients] = useState([]);
+
+    const [showCreateAppointmentForm, setShowCreateAppointmentsForm] =
+        useState(false);
+    const [showEditAppointmentForm, setShowEditAppointmentForm] =
+        useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { token } = useAuth();
 
     useEffect(() => {
-        const fetchAppointments = async () => {
-            const options = {
-                method: "GET",
-                url: "/appointments",
-            };
+        const fetchAll = async () => {
+            console.log("fetching appointments...");
             try {
-                let response = await axios.request(options);
-                console.log(response.data);
-                setAppointments(response.data);
+                setLoading(true);
+                const [doctorRes, appointmentsRes, patientsRes] =
+                    await Promise.all([
+                        axios.get(`/doctors`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }),
+                        axios.get(`/appointments`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }),
+
+                        axios.get(`/patients`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }),
+                    ]);
+
+                // Map appointments to include patient + doctor's name
+                const appointmentsWithPatientsAndDoctors =
+                    appointmentsRes.data.map((appt) => {
+                        const patient = patientsRes.data.find(
+                            (p) => p.id === appt.patient_id
+                        );
+
+                        const doctor = doctorRes.data.find(
+                            (d) => d.id === appt.doctor_id
+                        );
+                        return {
+                            ...appt,
+                            patient_name: patient
+                                ? `${patient.first_name} ${patient.last_name}`
+                                : "Unknown",
+                            doctor_name: doctor
+                                ? `${doctor.first_name} ${doctor.last_name}`
+                                : "Unknown",
+                        };
+                    });
+
+                console.log(
+                    "appointmentsWithPatientsAndDoctors:",
+                    appointmentsWithPatientsAndDoctors
+                );
+
+                setDoctors(doctorRes.data);
+                setPatients(patientsRes.data);
+                setAppointments(appointmentsWithPatientsAndDoctors);
+                setLoading(false);
             } catch (error) {
                 console.log(error);
+                setLoading(false);
             }
         };
-        fetchAppointments();
+
+        fetchAll();
     }, []);
 
-    const deleteAppointment = async (id) => {
-        const options = {
-            method: "GET",
-            url: "/appointments",
+    const onCreateCallback = (newAppointment) => {
+        console.log("OnCreateCallback called with:", newAppointment);
+        const patient = patients.find(
+            (p) => p.id === newAppointment.patient_id
+        );
+        const doctor = doctors.find((d) => d.id === newAppointment.doctor_id);
+
+        const enrichedAppointment = {
+            ...newAppointment,
+            patient_name: patient
+                ? `${patient.first_name} ${patient.last_name}`
+                : "Unknown",
+            doctor_name: doctor
+                ? `${doctor.first_name} ${doctor.last_name}`
+                : "Unknown",
         };
-        try {
-            let response = await axios.request(options);
-            console.log(response.data);
-            setAppointments(appointments.filter((appointment) => appointment.id !== id));
-            toast.success("Appointment deleted successfully");
-        } catch (error) {
-            console.log(error);
-            toast.error("Issue deleting appointment");
-        }
+        console.log(enrichedAppointment);
+        setAppointments([...appointments, enrichedAppointment]);
+        setShowCreateAppointmentsForm(false);
+    };
+
+    const onUpdateCallBack = (editedAppointment) => {
+        console.log("onUpdateCallBack called with:", editedAppointment);
+        const patient = patients.find(
+            (p) => p.id === editedAppointment.patient_id
+        );
+        const doctor = doctors.find(
+            (d) => d.id === editedAppointment.doctor_id
+        );
+
+        const enrichedAppointment = {
+            ...editedAppointment,
+            patient_name: patient
+                ? `${patient.first_name} ${patient.last_name}`
+                : "Unknown",
+            doctor_name: doctor
+                ? `${doctor.first_name} ${doctor.last_name}`
+                : "Unknown",
+        };
+
+        // Update the appointments array in state:
+        // - Use the previous appointments array (prev)
+        // - For each appointment (appt), check if its id matches the updated appointment's id
+        // - If it matches, replace it with the enriched (updated) appointment
+        // - If not, keep the original appointment
+        setAppointments((prev) =>
+            prev.map((appt) =>
+                appt.id === enrichedAppointment.id ? enrichedAppointment : appt
+            )
+        );
+        setShowEditAppointmentForm(null);
     };
 
     const onDeleteCallBack = (id) => {
         console.log("On Delete Callback called with id:", id);
-        setAppointments(appointments.filter((appointment) => appointment.id !== id));
+        setAppointments(
+            appointments.filter((appointment) => appointment.id !== id)
+        );
     };
 
-    console.log("Viewing appointments Index")
+    console.log("Viewing appointments Index");
+
+    if (loading) {
+        return (
+            <>
+                <h1>Loading</h1>
+            </>
+        );
+    }
 
     return (
         <div>
-            <Button asChild variant="outline" className={"mb-4 mr-auto block"}>
-                <Link size="sm" to={`/appointments/create`}>
+            <div className={"mb-4 mr-auto block"}>
+                <Button
+                    variant="outline"
+                    onClick={() => setShowCreateAppointmentsForm(true)}
+                >
                     Create New Appointment
-                </Link>
-            </Button>
+                </Button>
+            </div>
+            {showCreateAppointmentForm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setShowCreateAppointmentsForm(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="animate-in zoom-in-95 duration-200"
+                    >
+                        <CreateEditAppointmentForm
+                            setShowAppointmentForm={
+                                setShowCreateAppointmentsForm
+                            }
+                            onCreateCallback={onCreateCallback}
+                        />
+                    </div>
+                </div>
+            )}
+
             <Table>
-                {/* <TableCaption>A list of appointments</TableCaption> */}
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Specialisation</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
+                        <TableHead>Appointment Date</TableHead>
+                        <TableHead>Patient Name</TableHead>
+                        <TableHead>Doctor Name</TableHead>
+
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -92,11 +212,19 @@ export default function AppointmentsIndex() {
                     {appointments.map((appointment) => (
                         <TableRow key={appointment.id}>
                             <TableCell>
-                                Dr {appointment.first_name} {appointment.last_name}
+                                {appointment.appointment_date
+                                    ? new Date(
+                                          appointment.appointment_date * 1000
+                                      ).toLocaleString()
+                                    : "-"}
                             </TableCell>
-                            <TableCell>{appointment.specialisation}</TableCell>
-                            <TableCell>{appointment.email}</TableCell>
-                            <TableCell>{appointment.phone}</TableCell>
+                            <TableCell>
+                                {appointment.patient_name || "-"}
+                            </TableCell>
+                            <TableCell>
+                                {appointment.doctor_name || "-"}
+                            </TableCell>
+
                             <TableCell>
                                 <div className="flex gap-2 text-right justify-end">
                                     <Button
@@ -104,9 +232,10 @@ export default function AppointmentsIndex() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(`/appointments/${appointment.id}`, {
-                                                state: { appointment },
-                                            })
+                                            navigate(
+                                                `/appointments/${appointment.id}`,
+                                                { state: { appointment } }
+                                            )
                                         }
                                     >
                                         <Eye />
@@ -116,13 +245,49 @@ export default function AppointmentsIndex() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(
-                                                `/appointments/${appointment.id}/edit`,
-                                                { state: { appointment } }
+                                            setShowEditAppointmentForm(
+                                                appointment.id
                                             )
                                         }
                                     >
                                         <Pencil />
+
+                                        {/* EDITAPPOINTMENT */}
+                                        {/* DONT GET CONFUSED here is where im using the form in the edit config */}
+
+                                        {showEditAppointmentForm ===
+                                            appointment.id && (
+                                            <div
+                                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                                onClick={() =>
+                                                    setShowEditAppointmentForm(
+                                                        null
+                                                    )
+                                                }
+                                            >
+                                                <div
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
+                                                    }
+                                                    className="animate-in zoom-in-95 duration-200"
+                                                >
+                                                    <CreateEditAppointmentForm
+                                                        appointment={
+                                                            appointment
+                                                        }
+                                                        setShowAppointmentForm={
+                                                            setShowEditAppointmentForm
+                                                        }
+                                                        onCreateCallback={
+                                                            onCreateCallback
+                                                        }
+                                                        onUpdateCallback={
+                                                            onUpdateCallBack
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </Button>
                                     <DeleteBtn
                                         onDeleteCallBack={onDeleteCallBack}

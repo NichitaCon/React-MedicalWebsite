@@ -20,10 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Eye, PencilIcon, Trash } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
-import AppointmentCreateForm from "@/components/customComponents/CreateAppointmentForm";
+import AppointmentCreateForm from "@/components/customComponents/CreateEditAppointmentForm";
 import { toast } from "sonner";
 import EditAppointmentDateCard from "@/components/customComponents/EditAppointmentDateCard";
 import CreateDiagnosisForm from "@/components/customComponents/CreateDiagnosisForm";
+import CreateAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
 
 export default function DoctorShow() {
     const { id } = useParams();
@@ -191,10 +192,7 @@ export default function DoctorShow() {
                 {
                     ...newAppointment,
                     patient_name: patientName,
-                    appointment_date: Math.floor(
-                        new Date(newAppointment.appointment_date).getTime() /
-                            1000
-                    ),
+                    
                 },
             ],
         });
@@ -609,7 +607,7 @@ export default function DoctorShow() {
                         onClick={(e) => e.stopPropagation()}
                         className="animate-in zoom-in-95 duration-200"
                     >
-                        <AppointmentCreateForm
+                        <CreateAppointmentForm
                             doctor={doctor}
                             patients={patients}
                             onCreateCallback={onCreateCallback}
@@ -627,7 +625,7 @@ export default function DoctorShow() {
                         onClick={(e) => e.stopPropagation()}
                         className="animate-in zoom-in-95 duration-200"
                     >
-                        <AppointmentCreateForm
+                        <CreateAppointmentForm
                             doctor={doctor}
                             patients={patients}
                             onCreateCallback={onCreateCallback}

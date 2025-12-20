@@ -42,7 +42,23 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 
-export default function AppointmentCreateForm({ doctor, onCreateCallback, setShowAppointmentForm }) {
+// Originally built to be a simple create form, but also handles editing
+
+// CREATE FUNCTIONALITY
+// this works as a simple create card, use wherever to create an appointment
+// BUT
+// If creating an appointment from an individual doctor screen, pass in a doctor object (containing id, first_name and last_name) to preset the form to make an appointment with the currently selected doctor (this is demonstrated in doctors/show if this comment is hard to understand :P)
+
+// EDIT FUNCTIONALITY:
+// Pass in appointment when calling this component to edit an appointment to have the default values be the existing values
+
+export default function CreateEditAppointmentForm({
+    doctor,
+    appointment,
+    onCreateCallback,
+    onUpdateCallback,
+    setShowAppointmentForm,
+}) {
     const { token } = useAuth();
     const navigate = useNavigate();
     const [doctors, setDoctors] = useState([]);
@@ -50,7 +66,11 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
     const [patientOpen, setPatientOpen] = useState(false);
     const [doctorOpen, setDoctorOpen] = useState(false);
     const location = useLocation();
-    console.log("Location in appointmentForm", location);
+    // console.log("Location in appointmentForm", location);
+
+    console.log("appointment in CreateEditAppointmentForm:", appointment);
+    if (appointment) {
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,7 +119,48 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
 
             // Call the callback with the new appointment data if provided
             if (onCreateCallback) {
-                onCreateCallback(payload);
+                onCreateCallback(response.data);
+            }
+        } catch (err) {
+            console.error("error creating appointment:", err);
+            toast.error(
+                err.response?.data?.message || "Failed to create appointment"
+            );
+        }
+    };
+
+    const updateAppointment = async (formData) => {
+        // Convert string IDs to numbers and date to ISO string
+        const payload = {
+            appointment_date: formData.appointment_date.toISOString(),
+            doctor_id: parseInt(formData.doctor_id),
+            patient_id: parseInt(formData.patient_id),
+        };
+
+        console.log(
+            "updating appointment",
+            appointment.id,
+            " with payload:",
+            payload
+        );
+
+        const options = {
+            method: "PATCH",
+            url: `/appointments/${appointment.id}`,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            data: payload,
+        };
+
+        try {
+            let response = await axios.request(options);
+            console.log("Appointment updated:", response.data);
+            toast.success("Appointment updated successfully");
+
+            // Call the callback with the new appointment data if provided
+            if (onUpdateCallback) {
+                onUpdateCallback(response.data);
             }
         } catch (err) {
             console.error("error creating appointment:", err);
@@ -119,23 +180,41 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
 
     const form = useForm({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            doctor_id: doctor ? doctor.id.toString() : "",
-            patient_id: "",
-        },
+        defaultValues: appointment
+            ? {
+                  doctor_id: appointment.doctor_id.toString(),
+                  patient_id: appointment.patient_id.toString(),
+                  appointment_date: new Date(
+                      appointment.appointment_date * 1000
+                  ),
+              }
+            : {
+                  doctor_id: doctor?.id ? doctor.id.toString() : "",
+                  patient_id: "",
+                  appointment_date: undefined,
+              },
         mode: "onSubmit",
     });
 
     const submitForm = (data) => {
-        createAppointment(data);
+        if (appointment) {
+            updateAppointment(data);
+        } else {
+            createAppointment(data);
+        }
     };
 
     return (
         <Card className="w-full max-w-md mt-4">
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle>Create New Appointment</CardTitle>
-                    <button className="transition-all hover:bg-gray-100 p-1 rounded-sm" onClick={() => setShowAppointmentForm(false)}>
+                    <CardTitle>
+                        {appointment ? "Edit" : "Create New"} Appointment
+                    </CardTitle>
+                    <button
+                        className="transition-all hover:bg-gray-100 p-1 rounded-sm"
+                        onClick={() => setShowAppointmentForm(false)}
+                    >
                         <X />
                     </button>
                 </div>
@@ -162,7 +241,10 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                 render={({ field, fieldState }) => (
                                     <Field className="flex flex-col">
                                         <FieldLabel>Doctor</FieldLabel>
-                                        <Popover open={doctorOpen} onOpenChange={setDoctorOpen}>
+                                        <Popover
+                                            open={doctorOpen}
+                                            onOpenChange={setDoctorOpen}
+                                        >
                                             <PopoverTrigger asChild>
                                                 <Button
                                                     variant="outline"
@@ -170,12 +252,29 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                                     aria-expanded={doctorOpen}
                                                     className={cn(
                                                         "w-full justify-between",
-                                                        !field.value && "text-muted-foreground"
+                                                        !field.value &&
+                                                            "text-muted-foreground"
                                                     )}
                                                 >
                                                     {field.value
-                                                        ? doctors.find((d) => d.id.toString() === field.value)
-                                                            ? `Dr. ${doctors.find((d) => d.id.toString() === field.value).first_name} ${doctors.find((d) => d.id.toString() === field.value).last_name}`
+                                                        ? doctors.find(
+                                                              (d) =>
+                                                                  d.id.toString() ===
+                                                                  field.value
+                                                          )
+                                                            ? `Dr. ${
+                                                                  doctors.find(
+                                                                      (d) =>
+                                                                          d.id.toString() ===
+                                                                          field.value
+                                                                  ).first_name
+                                                              } ${
+                                                                  doctors.find(
+                                                                      (d) =>
+                                                                          d.id.toString() ===
+                                                                          field.value
+                                                                  ).last_name
+                                                              }`
                                                             : "Select a doctor"
                                                         : "Select a doctor"}
                                                     <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -185,28 +284,49 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                                 <Command>
                                                     <CommandInput placeholder="Search doctor..." />
                                                     <CommandList>
-                                                        <CommandEmpty>No doctor found.</CommandEmpty>
+                                                        <CommandEmpty>
+                                                            No doctor found.
+                                                        </CommandEmpty>
                                                         <CommandGroup>
-                                                            {doctors.map((doctor) => (
-                                                                <CommandItem
-                                                                    key={doctor.id}
-                                                                    value={`${doctor.first_name} ${doctor.last_name} ${doctor.specialisation}`}
-                                                                    onSelect={() => {
-                                                                        field.onChange(doctor.id.toString());
-                                                                        setDoctorOpen(false);
-                                                                    }}
-                                                                >
-                                                                    <CheckIcon
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            field.value === doctor.id.toString()
-                                                                                ? "opacity-100"
-                                                                                : "opacity-0"
-                                                                        )}
-                                                                    />
-                                                                    Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialisation}
-                                                                </CommandItem>
-                                                            ))}
+                                                            {doctors.map(
+                                                                (doctor) => (
+                                                                    <CommandItem
+                                                                        key={
+                                                                            doctor.id
+                                                                        }
+                                                                        value={`${doctor.first_name} ${doctor.last_name} ${doctor.specialisation}`}
+                                                                        onSelect={() => {
+                                                                            field.onChange(
+                                                                                doctor.id.toString()
+                                                                            );
+                                                                            setDoctorOpen(
+                                                                                false
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <CheckIcon
+                                                                            className={cn(
+                                                                                "mr-2 h-4 w-4",
+                                                                                field.value ===
+                                                                                    doctor.id.toString()
+                                                                                    ? "opacity-100"
+                                                                                    : "opacity-0"
+                                                                            )}
+                                                                        />
+                                                                        Dr.{" "}
+                                                                        {
+                                                                            doctor.first_name
+                                                                        }{" "}
+                                                                        {
+                                                                            doctor.last_name
+                                                                        }{" "}
+                                                                        -{" "}
+                                                                        {
+                                                                            doctor.specialisation
+                                                                        }
+                                                                    </CommandItem>
+                                                                )
+                                                            )}
                                                         </CommandGroup>
                                                     </CommandList>
                                                 </Command>
@@ -229,7 +349,10 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                             render={({ field, fieldState }) => (
                                 <Field className="flex flex-col">
                                     <FieldLabel>Patient</FieldLabel>
-                                    <Popover open={patientOpen} onOpenChange={setPatientOpen}>
+                                    <Popover
+                                        open={patientOpen}
+                                        onOpenChange={setPatientOpen}
+                                    >
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
@@ -237,7 +360,8 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                                 aria-expanded={patientOpen}
                                                 className={cn(
                                                     "w-full justify-between",
-                                                    !field.value && "text-muted-foreground"
+                                                    !field.value &&
+                                                        "text-muted-foreground"
                                                 )}
                                             >
                                                 {field.value
@@ -245,7 +369,9 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                                           (patient) =>
                                                               patient.id.toString() ===
                                                               field.value
-                                                      )?.first_name + " " + patients.find(
+                                                      )?.first_name +
+                                                      " " +
+                                                      patients.find(
                                                           (patient) =>
                                                               patient.id.toString() ===
                                                               field.value
@@ -258,28 +384,44 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                                             <Command>
                                                 <CommandInput placeholder="Search patient..." />
                                                 <CommandList>
-                                                    <CommandEmpty>No patient found.</CommandEmpty>
+                                                    <CommandEmpty>
+                                                        No patient found.
+                                                    </CommandEmpty>
                                                     <CommandGroup>
-                                                        {patients.map((patient) => (
-                                                            <CommandItem
-                                                                key={patient.id}
-                                                                value={`${patient.first_name} ${patient.last_name}`}
-                                                                onSelect={() => {
-                                                                    field.onChange(patient.id.toString());
-                                                                    setPatientOpen(false);
-                                                                }}
-                                                            >
-                                                                <CheckIcon
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        field.value === patient.id.toString()
-                                                                            ? "opacity-100"
-                                                                            : "opacity-0"
-                                                                    )}
-                                                                />
-                                                                {patient.first_name} {patient.last_name}
-                                                            </CommandItem>
-                                                        ))}
+                                                        {patients.map(
+                                                            (patient) => (
+                                                                <CommandItem
+                                                                    key={
+                                                                        patient.id
+                                                                    }
+                                                                    value={`${patient.first_name} ${patient.last_name}`}
+                                                                    onSelect={() => {
+                                                                        field.onChange(
+                                                                            patient.id.toString()
+                                                                        );
+                                                                        setPatientOpen(
+                                                                            false
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <CheckIcon
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            field.value ===
+                                                                                patient.id.toString()
+                                                                                ? "opacity-100"
+                                                                                : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {
+                                                                        patient.first_name
+                                                                    }{" "}
+                                                                    {
+                                                                        patient.last_name
+                                                                    }
+                                                                </CommandItem>
+                                                            )
+                                                        )}
                                                     </CommandGroup>
                                                 </CommandList>
                                             </Command>
@@ -411,7 +553,7 @@ export default function AppointmentCreateForm({ doctor, onCreateCallback, setSho
                     Reset
                 </Button>
                 <Button type="submit" form="create-appointment-form">
-                    Create Appointment
+                    {appointment ? "Edit" : "Create"} Appointment
                 </Button>
             </CardFooter>
         </Card>
