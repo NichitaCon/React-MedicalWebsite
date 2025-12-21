@@ -17,6 +17,7 @@ import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import CreateEditAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
+import AppointmentDetails from "@/components/customComponents/AppointmentDetails";
 
 // import {
 //   Card,
@@ -37,6 +38,7 @@ export default function AppointmentsIndex() {
         useState(false);
     const [showEditAppointmentForm, setShowEditAppointmentForm] =
         useState(null);
+    const [showAppointmentDetails, setShowAppointmentDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { token } = useAuth();
@@ -228,13 +230,17 @@ export default function AppointmentsIndex() {
                             <TableCell>
                                 <div className="flex gap-2 text-right justify-end">
                                     <Button
-                                        className="cursor-pointer hover:border-blue-500"
+                                        className={`${
+                                            showAppointmentDetails ===
+                                            appointment.id
+                                                ? "cursor-default"
+                                                : "cursor-pointer hover:border-blue-500"
+                                        }`}
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(
-                                                `/appointments/${appointment.id}`,
-                                                { state: { appointment } }
+                                            setShowAppointmentDetails(
+                                                appointment.id
                                             )
                                         }
                                     >
@@ -254,40 +260,6 @@ export default function AppointmentsIndex() {
 
                                         {/* EDITAPPOINTMENT */}
                                         {/* DONT GET CONFUSED here is where im using the form in the edit config */}
-
-                                        {showEditAppointmentForm ===
-                                            appointment.id && (
-                                            <div
-                                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                                                onClick={() =>
-                                                    setShowEditAppointmentForm(
-                                                        null
-                                                    )
-                                                }
-                                            >
-                                                <div
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                    className="animate-in zoom-in-95 duration-200"
-                                                >
-                                                    <CreateEditAppointmentForm
-                                                        appointment={
-                                                            appointment
-                                                        }
-                                                        setShowAppointmentForm={
-                                                            setShowEditAppointmentForm
-                                                        }
-                                                        onCreateCallback={
-                                                            onCreateCallback
-                                                        }
-                                                        onUpdateCallback={
-                                                            onUpdateCallBack
-                                                        }
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
                                     </Button>
                                     <DeleteBtn
                                         onDeleteCallBack={onDeleteCallBack}
@@ -296,6 +268,52 @@ export default function AppointmentsIndex() {
                                     />
                                 </div>
                             </TableCell>
+                            {showAppointmentDetails === appointment.id && (
+                                <div
+                                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                    onClick={() => {
+                                        console.log(
+                                            "outside has been clicked",
+                                            showAppointmentDetails
+                                        );
+                                        setShowAppointmentDetails(null);
+                                    }}
+                                >
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="animate-in zoom-in-95 duration-200"
+                                    >
+                                        <AppointmentDetails
+                                            appointment={appointment}
+                                            setShowAppointmentDetails={
+                                                setShowAppointmentDetails
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            {showEditAppointmentForm === appointment.id && (
+                                <div
+                                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                    onClick={() =>
+                                        setShowEditAppointmentForm(null)
+                                    }
+                                >
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="animate-in zoom-in-95 duration-200"
+                                    >
+                                        <CreateEditAppointmentForm
+                                            appointment={appointment}
+                                            setShowAppointmentForm={
+                                                setShowEditAppointmentForm
+                                            }
+                                            onCreateCallback={onCreateCallback}
+                                            onUpdateCallback={onUpdateCallBack}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </TableRow>
                     ))}
                 </TableBody>
