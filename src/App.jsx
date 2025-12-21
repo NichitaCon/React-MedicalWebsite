@@ -17,6 +17,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import FormExamples from "@/pages/examples/Forms";
 import AppointmentsCreate from "./pages/appointments/Create";
 import AppointmentsIndex from "./pages/appointments/Index";
+import PatientsIndex from "./pages/patients/Index";
 
 // Main layout component
 function AppLayout() {
@@ -145,6 +146,12 @@ function AppLayout() {
                                         <Route
                                             path="/appointments/create"
                                             element={<AppointmentsCreate />}
+                                        />
+
+                                        {/* Patients */}
+                                        <Route
+                                            path="/patients"
+                                            element={<PatientsIndex />}
                                         />
                                     </Route>
                                     <Route
