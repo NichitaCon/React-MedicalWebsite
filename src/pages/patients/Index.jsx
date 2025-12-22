@@ -15,6 +15,7 @@ import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { useAuth } from "@/hooks/useAuth";
 import CreateEditPatientForm from "@/components/customComponents/CreateEditPatientForm";
 import dayjs from "dayjs";
+import PatientDetails from "@/components/customComponents/PatientDetails";
 
 export default function PatientsIndex() {
     const [patients, setPatients] = useState([]);
@@ -32,9 +33,9 @@ export default function PatientsIndex() {
                 const res = await axios.get("/patients", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                console.table("patients in patientsIndex:");
                 // Neat debugging trick i found from tiktok, makes a table out of the data for easy vis
-                console.table(res.data);
+                // console.table("patients in patientsIndex:");
+                // console.table(res.data);
                 setPatients(res.data);
             } catch (error) {
                 console.error("error fetching patients:", error);
@@ -156,7 +157,27 @@ export default function PatientsIndex() {
                                                 onUpdateCallback={
                                                     onUpdateCallback
                                                 }
-                                                setShowPatientForm={setShowEditPatientForm}
+                                                setShowPatientForm={
+                                                    setShowEditPatientForm
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                {showPatientDetails === patient.id && (
+                                    <div
+                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                        onClick={() =>
+                                            setShowPatientDetails(null)
+                                        }
+                                    >
+                                        <div
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="animate-in zoom-in-95 duration-200"
+                                        >
+                                            <PatientDetails
+                                            setShowPatientDetails={setShowPatientDetails}
+                                            patient={patient}
                                             />
                                         </div>
                                     </div>
