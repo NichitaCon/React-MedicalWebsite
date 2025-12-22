@@ -76,7 +76,7 @@ export const AuthProvidor = ({ children }) => {
             );
             return {
                 success: false,
-                msg: err.response?.data?.error || "Login failed",
+                msg: err.response?.data?.msg || "Login failed",
             };
         }
     };
