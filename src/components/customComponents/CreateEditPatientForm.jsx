@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import dayjs from "dayjs";
 
 const patientSchema = z.object({
     first_name: z
@@ -27,7 +28,9 @@ const patientSchema = z.object({
         .min(2, "Last name must have more than 2 characters")
         .max(30, "Last name must have less than 30 characters"),
     email: z.email(),
-    phone: z.string().length(10, "Phone number must be 10 digits long"),
+    phone: z
+        .string()
+        .regex(/^\d{10}$/, "Phone number must be 10 digits and numeric"),
     date_of_birth: z.string(),
     address: z.string().min(1, "Address is required"),
 });
@@ -38,11 +41,21 @@ export default function CreateEditPatientForm({
     onUpdateCallback,
     setShowPatientForm,
 }) {
+    if (patient) {
+        console.log("patient passed in for updating:");
+        console.log(dayjs.unix(patient.date_of_birth).format("YYYY-MM-DD"));
+        // console.table(patient)
+    }
     const { token } = useAuth();
     const form = useForm({
         resolver: zodResolver(patientSchema),
         defaultValues: patient
-            ? { ...patient }
+            ? {
+                  ...patient,
+                  date_of_birth: dayjs
+                      .unix(patient.date_of_birth)
+                      .format("YYYY-MM-DD"),
+              }
             : {
                   first_name: "",
                   last_name: "",
@@ -54,13 +67,9 @@ export default function CreateEditPatientForm({
         mode: "onSubmit",
     });
 
-    useEffect(() => {
-        if (patient) form.reset(patient);
-    }, [patient]);
-
     const createPatient = async (formData) => {
         try {
-            console.log("creating patient with payload:", formData)
+            console.log("creating patient with payload:", formData);
             const response = await axios.post("/patients", formData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -120,6 +129,34 @@ export default function CreateEditPatientForm({
             toast.success("Patient updated successfully");
             if (onUpdateCallback) onUpdateCallback(response.data);
         } catch (err) {
+            if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: patients.email"
+            ) {
+                form.setError("email", {
+                    type: "manual",
+                    message: "Email address already in use",
+                });
+                toast.error(
+                    "This Email address is already in use by another patient"
+                );
+
+                return;
+            } else if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: patients.phone"
+            ) {
+                form.setError("phone", {
+                    type: "manual",
+                    message: "Phone number already in use",
+                });
+                toast.error(
+                    "This phone number is already in use by another patient"
+                );
+
+                return;
+            }
+
             toast.error(
                 err.response?.data?.message || "Failed to update patient"
             );

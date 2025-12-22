@@ -13,7 +13,6 @@ import {
 import { Eye, Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { useAuth } from "@/hooks/useAuth";
-import CreateEditDoctorForm from "@/components/customComponents/CreateEditDoctorForm";
 import CreateEditPatientForm from "@/components/customComponents/CreateEditPatientForm";
 import dayjs from "dayjs";
 
@@ -33,12 +32,12 @@ export default function PatientsIndex() {
                 const res = await axios.get("/patients", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                console.table("patients in patientsIndex:")
+                console.table("patients in patientsIndex:");
                 // Neat debugging trick i found from tiktok, makes a table out of the data for easy vis
                 console.table(res.data);
                 setPatients(res.data);
             } catch (error) {
-                console.error("error fetching patients:", error)
+                console.error("error fetching patients:", error);
                 setPatients([]);
             }
             setLoading(false);
@@ -51,12 +50,12 @@ export default function PatientsIndex() {
         setShowCreatePatientForm(false);
     };
 
-    // const onUpdateCallback = (updatedPatient) => {
-    //     setPatients((prev) =>
-    //         prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
-    //     );
-    //     setShowEditPatientForm(null);
-    // };
+    const onUpdateCallback = (updatedPatient) => {
+        setPatients((prev) =>
+            prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+        );
+        setShowEditPatientForm(null);
+    };
 
     const onDeleteCallback = (id) => {
         setPatients(patients.filter((p) => p.id !== id));
@@ -83,7 +82,10 @@ export default function PatientsIndex() {
                         onClick={(e) => e.stopPropagation()}
                         className="animate-in zoom-in-95 duration-200"
                     >
-                        <CreateEditPatientForm onCreateCallback={onCreateCallback}/>
+                        <CreateEditPatientForm
+                            onCreateCallback={onCreateCallback}
+                            setShowPatientForm={setShowCreatePatientForm}
+                        />
                     </div>
                 </div>
             )}
@@ -107,7 +109,9 @@ export default function PatientsIndex() {
                             <TableCell>{patient.email}</TableCell>
                             <TableCell>{patient.phone}</TableCell>
                             <TableCell>
-                                {dayjs.unix(patient.date_of_birth).format('D/MM/YYYY')}
+                                {dayjs
+                                    .unix(patient.date_of_birth)
+                                    .format("D/MM/YYYY")}
                             </TableCell>
                             <TableCell>{patient.address}</TableCell>
                             <TableCell>
@@ -147,7 +151,13 @@ export default function PatientsIndex() {
                                             onClick={(e) => e.stopPropagation()}
                                             className="animate-in zoom-in-95 duration-200"
                                         >
-                                            <h1>Work on this later</h1>
+                                            <CreateEditPatientForm
+                                                patient={patient}
+                                                onUpdateCallback={
+                                                    onUpdateCallback
+                                                }
+                                                setShowPatientForm={setShowEditPatientForm}
+                                            />
                                         </div>
                                     </div>
                                 )}
