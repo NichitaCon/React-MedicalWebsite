@@ -13,6 +13,9 @@ import {
 import { Eye, Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { useAuth } from "@/hooks/useAuth";
+import CreateEditDoctorForm from "@/components/customComponents/CreateEditDoctorForm";
+import CreateEditPatientForm from "@/components/customComponents/CreateEditPatientForm";
+import dayjs from "dayjs";
 
 export default function PatientsIndex() {
     const [patients, setPatients] = useState([]);
@@ -30,8 +33,12 @@ export default function PatientsIndex() {
                 const res = await axios.get("/patients", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                console.table("patients in patientsIndex:")
+                // Neat debugging trick i found from tiktok, makes a table out of the data for easy vis
+                console.table(res.data);
                 setPatients(res.data);
             } catch (error) {
+                console.error("error fetching patients:", error)
                 setPatients([]);
             }
             setLoading(false);
@@ -39,10 +46,10 @@ export default function PatientsIndex() {
         fetchPatients();
     }, [token]);
 
-    // const onCreateCallback = (newPatient) => {
-    //     setPatients([...patients, newPatient]);
-    //     setShowCreatePatientForm(false);
-    // };
+    const onCreateCallback = (newPatient) => {
+        setPatients([...patients, newPatient]);
+        setShowCreatePatientForm(false);
+    };
 
     // const onUpdateCallback = (updatedPatient) => {
     //     setPatients((prev) =>
@@ -76,7 +83,7 @@ export default function PatientsIndex() {
                         onClick={(e) => e.stopPropagation()}
                         className="animate-in zoom-in-95 duration-200"
                     >
-                        <h1>work on this later too!</h1>
+                        <CreateEditPatientForm onCreateCallback={onCreateCallback}/>
                     </div>
                 </div>
             )}
@@ -99,7 +106,9 @@ export default function PatientsIndex() {
                             <TableCell>{patient.last_name}</TableCell>
                             <TableCell>{patient.email}</TableCell>
                             <TableCell>{patient.phone}</TableCell>
-                            <TableCell>{patient.date_of_birth}</TableCell>
+                            <TableCell>
+                                {dayjs.unix(patient.date_of_birth).format('D/MM/YYYY')}
+                            </TableCell>
                             <TableCell>{patient.address}</TableCell>
                             <TableCell>
                                 <div className="flex gap-2 text-right justify-end">
