@@ -58,6 +58,11 @@ const data = {
             url: "/diagnoses",
             icon: IconDashboard,
         },
+         {
+            title: "Prescriptions",
+            url: "/prescriptions",
+            icon: IconDashboard,
+        },
     ],
     // examples: [
     //     {

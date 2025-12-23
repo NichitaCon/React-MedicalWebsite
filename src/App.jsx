@@ -19,6 +19,7 @@ import AppointmentsCreate from "./pages/appointments/Create";
 import AppointmentsIndex from "./pages/appointments/Index";
 import PatientsIndex from "./pages/patients/Index";
 import DiagnosesIndex from "./pages/diagnoses/Index";
+import PrescriptionsIndex from "./pages/prescriptions/Index";
 
 // Main layout component
 function AppLayout() {
@@ -160,6 +161,12 @@ function AppLayout() {
                                         <Route
                                             path="/diagnoses"
                                             element={<DiagnosesIndex />}
+                                        />
+
+                                        {/* Prescriptions */}
+                                        <Route
+                                            path="/prescriptions"
+                                            element={<PrescriptionsIndex />}
                                         />
                                     </Route>
                                     <Route

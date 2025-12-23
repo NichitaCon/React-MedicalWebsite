@@ -125,7 +125,7 @@ export default function DiagnosesIndex() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Patient ID</TableHead>
+                        <TableHead>Patient</TableHead>
                         <TableHead>Condition</TableHead>
                         <TableHead>Diagnosis Date</TableHead>
                         <TableHead>Created At</TableHead>

@@ -93,6 +93,7 @@ export default function CreateEditDiagnosisForm({
                 headers: { Authorization: `Bearer ${token}` },
             });
             toast.success("Diagnosis created successfully");
+            console.log("diagnosis created with response:", res.data);
             if (onCreateCallback) onCreateCallback(res.data);
         } catch (err) {
             console.error("error creating diagnosis:", err);
