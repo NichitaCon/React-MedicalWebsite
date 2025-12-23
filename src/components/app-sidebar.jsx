@@ -53,16 +53,11 @@ const data = {
             url: "/patients",
             icon: IconTheater,
         },
-        // {
-        //     title: "Performers",
-        //     url: "#",
-        //     icon: IconMicrophone2,
-        // },
-        // {
-        //     title: "Shows",
-        //     url: "#",
-        //     icon: IconMusic,
-        // },
+        {
+            title: "Diagnoses",
+            url: "/diagnoses",
+            icon: IconDashboard,
+        },
     ],
     // examples: [
     //     {

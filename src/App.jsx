@@ -18,6 +18,7 @@ import FormExamples from "@/pages/examples/Forms";
 import AppointmentsCreate from "./pages/appointments/Create";
 import AppointmentsIndex from "./pages/appointments/Index";
 import PatientsIndex from "./pages/patients/Index";
+import DiagnosesIndex from "./pages/diagnoses/Index";
 
 // Main layout component
 function AppLayout() {
@@ -152,6 +153,13 @@ function AppLayout() {
                                         <Route
                                             path="/patients"
                                             element={<PatientsIndex />}
+                                        />
+
+                                        {/* Diagnoses */}
+
+                                        <Route
+                                            path="/diagnoses"
+                                            element={<DiagnosesIndex />}
                                         />
                                     </Route>
                                     <Route
