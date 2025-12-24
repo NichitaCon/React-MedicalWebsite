@@ -20,11 +20,12 @@ import { Button } from "@/components/ui/button";
 import { Eye, PencilIcon, Trash } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
-import AppointmentCreateForm from "@/components/customComponents/CreateEditAppointmentForm";
 import { toast } from "sonner";
 import EditAppointmentDateCard from "@/components/customComponents/EditAppointmentDateCard";
-import CreateDiagnosisForm from "@/components/customComponents/CreateDiagnosisForm";
 import CreateAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
+import CreateEditPrescriptionForm from "@/components/customComponents/CreateEditPrescriptionForm";
+import Modal from "@/components/customComponents/Modal";
+import CreateEditDiagnosisForm from "@/components/customComponents/CreateEditDiagnosisForm";
 
 export default function DoctorShow() {
     const { id } = useParams();
@@ -37,6 +38,9 @@ export default function DoctorShow() {
     const [showAppointmentForm, setShowAppointmentForm] = useState(false);
     const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
     const [showDiagnosisForm, setShowDiagnosisForm] = useState(false);
+    const [showEditPrescriptionForm, setShowEditPrescriptionForm] =
+        useState(null); // holds prescription id or null
+    const [showEditDiagnosisForm, setShowEditDiagnosisForm] = useState(null); // holds diagnosis id or null
 
     const [editingAppointmentId, setEditingAppointmentId] = useState(null);
 
@@ -105,19 +109,19 @@ export default function DoctorShow() {
                     }
                 );
 
-                const prescriptionsWithPatients = filteredPrescriptions.map(
-                    (prescription) => {
-                        const patient = patientsRes.data.find(
-                            (p) => p.id === prescription.patient_id
-                        );
-                        return {
-                            ...prescription,
-                            patient_name: patient
-                                ? `${patient.first_name} ${patient.last_name}`
-                                : "Unknown",
-                        };
-                    }
-                );
+                // const prescriptionsWithPatients = filteredPrescriptions.map(
+                //     (prescription) => {
+                //         const patient = patientsRes.data.find(
+                //             (p) => p.id === prescription.patient_id
+                //         );
+                //         return {
+                //             ...prescription,
+                //             patient_name: patient
+                //                 ? `${patient.first_name} ${patient.last_name}`
+                //                 : "Unknown",
+                //         };
+                //     }
+                // );
 
                 const diagnosesWithPatients = filteredDiagnoses.map(
                     (diagnosis) => {
@@ -132,13 +136,35 @@ export default function DoctorShow() {
                         };
                     }
                 );
+                const hydratedPrescriptions = filteredPrescriptions.map(
+                    (prescription) => {
+                        const patient = patientsRes.data.find(
+                            (patient) => patient.id === prescription.patient_id
+                        );
+
+                        const diagnosis = filteredDiagnoses.find(
+                            (diagnosis) =>
+                                diagnosis.id === prescription.diagnosis_id
+                        );
+                        return {
+                            ...prescription,
+                            patient_name: patient
+                                ? `${patient.first_name} ${patient.last_name}`
+                                : "Unknown",
+
+                            diagnosis_condition: diagnosis
+                                ? diagnosis.condition
+                                : "Unknown",
+                        };
+                    }
+                );
 
                 console.log("filteredDiagnosisnames:", diagnosesWithPatients);
 
                 setDoctor({
                     ...doctorRes.data,
                     appointments: appointmentsWithPatients,
-                    prescriptions: prescriptionsWithPatients,
+                    prescriptions: hydratedPrescriptions,
                     diagnoses: diagnosesWithPatients,
                 });
                 setPatients(patientsRes.data);
@@ -192,7 +218,6 @@ export default function DoctorShow() {
                 {
                     ...newAppointment,
                     patient_name: patientName,
-                    
                 },
             ],
         });
@@ -231,29 +256,90 @@ export default function DoctorShow() {
     };
 
     const onDiagnosisCreateCallback = (newDiagnosis) => {
+        // toast("Diagnosis has no direct relationship to doctor in the backend", "Diagnosi's can only be tied to doctors via prescriptions")
+        toast("Diagnosis created without relationship", {
+            description:
+                "Diagnoses can only be tied to doctors via prescriptions. (Backend Limitation)",
+        });
+        setShowDiagnosisForm(false);
+    };
+
+    // Callback for diagnosis update
+    const onDiagnosisUpdateCallback = (updatedDiagnosis) => {
         const patient = patients.find(
-            (p) => p.id === newDiagnosis.patient_id
+            (p) => p.id === updatedDiagnosis.patient_id
         );
         const patientName = patient
             ? `${patient.first_name} ${patient.last_name}`
             : "Unknown";
 
-        setDoctor({
-            ...doctor,
-            diagnoses: [
-                ...doctor.diagnoses,
+        setDoctor((prev) => ({
+            ...prev,
+            diagnoses: (prev.diagnoses || []).map((diagnosis) =>
+                diagnosis.id === updatedDiagnosis.id
+                    ? { ...updatedDiagnosis, patient_name: patientName }
+                    : diagnosis
+            ),
+        }));
+        setShowEditDiagnosisForm(null);
+    };
+
+    // Callback for prescription creation
+    const onPrescriptionCreateCallback = (newPrescription) => {
+        const patient = patients.find(
+            (p) => p.id === newPrescription.patient_id
+        );
+        const patientName = patient
+            ? `${patient.first_name} ${patient.last_name}`
+            : "Unknown";
+
+        setDoctor((prev) => ({
+            ...prev,
+            prescriptions: [
+                ...(prev.prescriptions || []),
                 {
-                    ...newDiagnosis,
+                    ...newPrescription,
                     patient_name: patientName,
-                    diagnosis_date: Math.floor(
-                        new Date(newDiagnosis.diagnosis_date).getTime() /
-                            1000
-                    ),
                 },
             ],
-        });
+            diagnoses: [
+                ...(prev.diagnoses || []),
+                { ...newPrescription.diagnosis, patient_name: patientName },
+            ],
+        }));
+        setShowPrescriptionForm(false);
+    };
 
-        setShowDiagnosisForm(false);
+    // Callback for prescription update
+    const onPrescriptionUpdateCallback = (updatedPrescription) => {
+        const patient = patients.find(
+            (p) => p.id === updatedPrescription.patient_id
+        );
+        const patientName = patient
+            ? `${patient.first_name} ${patient.last_name}`
+            : "Unknown";
+
+        setDoctor((prev) => ({
+            ...prev,
+            prescriptions: (prev.prescriptions || []).map((prescription) =>
+                prescription.id === updatedPrescription.id
+                    ? { ...updatedPrescription, patient_name: patientName }
+                    : prescription
+            ),
+            diagnoses: [
+                // Spreading out the old diagnosis, and filtering out the old one (pre update)
+                ...(prev.diagnoses || []).filter(
+                    (diagnosis) =>
+                        diagnosis.id !== updatedPrescription.diagnosis.id
+                ),
+                // adding in the updated diagnosis to replace the removed one (avoiding duplicates)
+                {
+                    ...updatedPrescription.diagnosis,
+                    patient_name: patientName,
+                },
+            ],
+        }));
+        setShowEditPrescriptionForm(null);
     };
 
     const onDeleteCallBack = (id) => {
@@ -262,6 +348,26 @@ export default function DoctorShow() {
             ...doctor,
             appointments: doctor.appointments.filter(
                 (appointment) => appointment.id !== id
+            ),
+        });
+    };
+
+    const onPrescriptionDeleteCallBack = (id) => {
+        console.log("On Prescription Delete Callback called with id:", id);
+        setDoctor({
+            ...doctor,
+            prescriptions: doctor.prescriptions.filter(
+                (prescription) => prescription.id !== id
+            ),
+        });
+    };
+
+    const onDiagnosisDeleteCallBack = (id) => {
+        console.log("On Prescription Delete Callback called with id:", id);
+        setDoctor({
+            ...doctor,
+            diagnoses: doctor.diagnoses.filter(
+                (diagnosis) => diagnosis.id !== id
             ),
         });
     };
@@ -278,7 +384,7 @@ export default function DoctorShow() {
                     <TabsList className="flex!">
                         <TabsTrigger
                             value="appointments"
-                            className="data-[state=active]:bg-blue-300!"
+                            // className="data-[state=active]:bg-blue-300!"
                         >
                             Appointments
                         </TabsTrigger>
@@ -471,6 +577,18 @@ export default function DoctorShow() {
                                                     variant="outline"
                                                     size="icon"
                                                     onClick={() =>
+                                                        setShowEditPrescriptionForm(
+                                                            prescription.id
+                                                        )
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                </Button>
+                                                <Button
+                                                    className="cursor-pointer hover:border-blue-500"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() =>
                                                         navigate(
                                                             `/prescriptions/${prescription.id}`
                                                         )
@@ -478,6 +596,13 @@ export default function DoctorShow() {
                                                 >
                                                     <Eye />
                                                 </Button>
+                                                <DeleteBtn
+                                                    resource="prescriptions"
+                                                    id={prescription.id}
+                                                    onDeleteCallBack={
+                                                        onPrescriptionDeleteCallBack
+                                                    }
+                                                />
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -512,7 +637,6 @@ export default function DoctorShow() {
                                                 </p>
                                             </div>
                                         </TableCell>
-
                                         <TableCell className="bg-white rounded-l-sm">
                                             <div>
                                                 <p className="text-sm text-gray-500">
@@ -523,7 +647,6 @@ export default function DoctorShow() {
                                                 </p>
                                             </div>
                                         </TableCell>
-
                                         <TableCell className="bg-white rounded-r-sm text-right">
                                             <div className="flex gap-2 justify-end items-center">
                                                 <div className="flex flex-col text-right">
@@ -546,46 +669,25 @@ export default function DoctorShow() {
                                                         ).toLocaleDateString()}
                                                     </p>
                                                 </div>
-
                                                 <div className="relative">
                                                     <Button
                                                         className="cursor-pointer hover:border-blue-500"
                                                         variant="outline"
                                                         size="icon"
                                                         onClick={() =>
-                                                            setEditingAppointmentId(
-                                                                editingAppointmentId ===
-                                                                    appointment.id
-                                                                    ? null
-                                                                    : appointment.id
+                                                            setShowEditDiagnosisForm(
+                                                                diagnosis.id
                                                             )
                                                         }
                                                     >
                                                         <PencilIcon />
                                                     </Button>
-
-                                                    {editingAppointmentId ===
-                                                        diagnosis.id && (
-                                                        <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
-                                                            <EditAppointmentDateCard
-                                                                diagnosis={
-                                                                    diagnosis
-                                                                }
-                                                                setEditingAppointmentId={
-                                                                    setEditingAppointmentId
-                                                                }
-                                                                onUpdateCallBack={
-                                                                    onUpdateCallBack
-                                                                }
-                                                            />
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <DeleteBtn
                                                     resource="diagnoses"
                                                     id={diagnosis.id}
                                                     onDeleteCallBack={
-                                                        onDeleteCallBack
+                                                        onDiagnosisDeleteCallBack
                                                     }
                                                 />
                                             </div>
@@ -598,60 +700,73 @@ export default function DoctorShow() {
                 </div>
             </Tabs>
 
-            {showAppointmentForm && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={() => setShowAppointmentForm(false)}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="animate-in zoom-in-95 duration-200"
-                    >
-                        <CreateAppointmentForm
-                            doctor={doctor}
-                            patients={patients}
-                            onCreateCallback={onCreateCallback}
-                            setShowAppointmentForm={setShowAppointmentForm}
-                        />
-                    </div>
-                </div>
-            )}
-            {showPrescriptionForm && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={() => setShowPrescriptionForm(false)}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="animate-in zoom-in-95 duration-200"
-                    >
-                        <CreateAppointmentForm
-                            doctor={doctor}
-                            patients={patients}
-                            onCreateCallback={onCreateCallback}
-                            setShowAppointmentForm={setShowAppointmentForm}
-                        />
-                    </div>
-                </div>
-            )}
-            {showDiagnosisForm && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={() => setShowDiagnosisForm(false)}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="animate-in zoom-in-95 duration-200"
-                    >
-                        <CreateDiagnosisForm
-                            doctor={doctor}
-                            patients={patients}
-                            onCreateCallback={onDiagnosisCreateCallback}
-                            setShowDiagnosisForm={setShowDiagnosisForm}
-                        />
-                    </div>
-                </div>
-            )}
+            {/* CreateAppointment modal */}
+            <Modal
+                renderCondition={showAppointmentForm}
+                onClose={() => setShowAppointmentForm(false)}
+            >
+                <CreateAppointmentForm
+                    doctor={doctor}
+                    patients={patients}
+                    onCreateCallback={onCreateCallback}
+                    setShowAppointmentForm={setShowAppointmentForm}
+                />
+            </Modal>
+            {/* Create Prescription Modal*/}
+            <Modal
+                renderCondition={showPrescriptionForm}
+                onClose={() => setShowPrescriptionForm(false)}
+            >
+                <CreateEditPrescriptionForm
+                    doctor={doctor}
+                    onCreateCallback={onPrescriptionCreateCallback}
+                    setShowPrescriptionForm={setShowPrescriptionForm}
+                />
+            </Modal>
+
+            {/* Edit Prescription Modal */}
+            <Modal
+                renderCondition={!!showEditPrescriptionForm}
+                onClose={() => setShowEditPrescriptionForm(null)}
+            >
+                <CreateEditPrescriptionForm
+                    prescription={doctor.prescriptions.find(
+                        (p) => p.id === showEditPrescriptionForm
+                    )}
+                    doctor={doctor}
+                    onUpdateCallback={onPrescriptionUpdateCallback}
+                    setShowPrescriptionForm={setShowEditPrescriptionForm}
+                />
+            </Modal>
+
+            {/* Create Diagnosis Modal */}
+            <Modal
+                renderCondition={showDiagnosisForm}
+                onClose={() => setShowDiagnosisForm(false)}
+            >
+                <CreateEditDiagnosisForm
+                    doctor={doctor}
+                    patients={patients}
+                    onCreateCallback={onDiagnosisCreateCallback}
+                    setShowDiagnosisForm={setShowDiagnosisForm}
+                />
+            </Modal>
+
+            {/* Edit Diagnosis Modal */}
+            <Modal
+                renderCondition={!!showEditDiagnosisForm}
+                onClose={() => setShowEditDiagnosisForm(null)}
+            >
+                <CreateEditDiagnosisForm
+                    diagnosis={doctor.diagnoses?.find(
+                        (d) => d.id === showEditDiagnosisForm
+                    )}
+                    doctor={doctor}
+                    patients={patients}
+                    onUpdateCallback={onDiagnosisUpdateCallback}
+                    setShowDiagnosisForm={setShowEditDiagnosisForm}
+                />
+            </Modal>
         </div>
     );
 }

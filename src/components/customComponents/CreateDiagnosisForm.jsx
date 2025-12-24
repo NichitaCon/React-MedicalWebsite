@@ -87,7 +87,7 @@ export default function CreateDiagnosisForm({ doctor, onCreateCallback, setShowD
         try {
             let response = await axios.request(options);
             console.log("Diagnosis created:", response.data);
-            toast.success("Diagnosis created successfully");
+            // toast.success("Diagnosis created successfully");
 
             // Call the callback with the new diagnosis data if provided
             if (onCreateCallback) {

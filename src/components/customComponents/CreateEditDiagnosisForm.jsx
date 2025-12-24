@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { useLocation } from "react-router";
 
 export default function CreateEditDiagnosisForm({
     diagnosis,
@@ -40,6 +41,8 @@ export default function CreateEditDiagnosisForm({
     onUpdateCallback,
     setShowDiagnosisForm,
 }) {
+    const location = useLocation();
+
     const { token } = useAuth();
     const [patients, setPatients] = useState([]);
     const [patientOpen, setPatientOpen] = useState(false);
@@ -92,7 +95,10 @@ export default function CreateEditDiagnosisForm({
             const res = await axios.post("/diagnoses", payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            toast.success("Diagnosis created successfully");
+
+            if (!location.pathname.includes("/doctors")) {
+                toast.success("Diagnosis created successfully");
+            }
             console.log("diagnosis created with response:", res.data);
             if (onCreateCallback) onCreateCallback(res.data);
         } catch (err) {

@@ -8,9 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
     Card,
-    CardAction,
     CardContent,
-    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
@@ -30,31 +28,17 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
-import { Calendar } from "@/components/ui/calendar";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { ChevronDownIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useNavigate, useParams, useLocation } from "react-router";
 
-export default function DoctorUpdateForm() {
+export default function DoctorUpdateForm({ onUpdateCallback, doctor }) {
     const { token } = useAuth();
-    const navigate = useNavigate();
-    const { id } = useParams();
 
-    const location = useLocation();
-    const doctor = location.state?.doctor;
-    console.log("doctor in doctoredit:", doctor);
-
-    const createDoctor = async (formData) => {
-        console.log("data in createDoctor:", formData);
+    const updateDoctor = async (formData) => {
+        console.log("data in updateDoctor:", formData);
         const options = {
             method: "PATCH",
-            url: `/doctors/${id}`,
+            url: `/doctors/${doctor.id}`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -64,16 +48,42 @@ export default function DoctorUpdateForm() {
         try {
             let response = await axios.request(options);
             console.log("Single doctor update api response:", response.data);
-            navigate("/doctors", {
-                state: {
-                    type: "success",
-                    message: `Doctor "${response.data.first_name}" updated!`,
-                },
-            });
+            toast.success("Doctor updated successfully");
+
+            if (onUpdateCallback) {
+                onUpdateCallback(response.data);
+            }
         } catch (err) {
             console.error("error updating doctor:", err);
             console.error("error response data:", err.response?.data);
             console.error("error response status:", err.response?.status);
+            if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: doctors.email"
+            ) {
+                form.setError("email", {
+                    type: "manual",
+                    message: "Email address already in use",
+                });
+                toast.error(
+                    "This Email address is already in use by another doctor"
+                );
+
+                return;
+            } else if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: doctors.phone"
+            ) {
+                form.setError("phone", {
+                    type: "manual",
+                    message: "Phone number already in use",
+                });
+                toast.error(
+                    "This phone number is already in use by another doctor"
+                );
+
+                return;
+            }
             toast.error(
                 err.response?.data?.message,
                 "Error",
@@ -85,8 +95,8 @@ export default function DoctorUpdateForm() {
 
     const formSchema = z.object({
         email: z.string().email(),
-        first_name: z.string(),
-        last_name: z.string(),
+        first_name: z.string().min(1, "First name is required."),
+        last_name: z.string().min(1, "Last name is required."),
         phone: z
             .string()
             .min(10, "Phone number must be at least 10 digits")
@@ -115,13 +125,13 @@ export default function DoctorUpdateForm() {
 
     const submitForm = (data) => {
         console.log("Form submitted:", data);
-        createDoctor(data);
+        updateDoctor(data);
     };
 
     return (
         <Card className="w-full max-w-md mt-4">
             <CardHeader>
-                <CardTitle>Various Form Examples</CardTitle>
+                <CardTitle>Update Doctor</CardTitle>
             </CardHeader>
             <CardContent>
                 <form id="form-demo-2" onSubmit={form.handleSubmit(submitForm)}>

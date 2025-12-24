@@ -35,6 +35,7 @@ import { Calendar } from "@/components/ui/calendar";
 
 export default function CreateEditPrescriptionForm({
     prescription,
+    doctor,
     onCreateCallback,
     onUpdateCallback,
     setShowPrescriptionForm,
@@ -77,7 +78,6 @@ export default function CreateEditPrescriptionForm({
         doctor_id: z.string().min(1, "Please select a doctor."),
         diagnosis: z.string().min(1, "Please provide a diagnosis."),
         medication: z.string().min(1, "Please enter medication."),
-
         dosage: z.string().min(1, "Please enter dosage."),
         start_date: z.date({ error: "Please select a start date" }),
         end_date: z.date({ error: "Please select an end date" }),
@@ -97,7 +97,7 @@ export default function CreateEditPrescriptionForm({
               }
             : {
                   patient_id: "",
-                  doctor_id: "",
+                  doctor_id: doctor?.id ? doctor.id.toString() : "",
                   diagnosis_id: "",
                   medication: "",
                   dosage: "",
@@ -163,7 +163,7 @@ export default function CreateEditPrescriptionForm({
             toast.success("Prescription created successfully");
 
             const onCreateCallbackData = { ...res.data, diagnosis };
-            // console.log("onCreateCallbackData in form:", onCreateCallbackData);
+            console.log("onCreateCallbackData in form:", onCreateCallbackData);
             if (onCreateCallback) onCreateCallback(onCreateCallbackData);
         } catch (err) {
             toast.error(
@@ -285,6 +285,15 @@ export default function CreateEditPrescriptionForm({
                     onSubmit={form.handleSubmit(submitForm)}
                 >
                     <div className="flex flex-col gap-6">
+                        {location.pathname.includes("/doctors") && (
+                            <div className="">
+                                <p>Doctor:</p>
+                                <h2 className="text-xl">
+                                    {doctor.first_name} {doctor.last_name} -{" "}
+                                    {doctor.specialisation}
+                                </h2>
+                            </div>
+                        )}
                         {/* Patient Selection */}
                         <Controller
                             name="patient_id"
@@ -379,98 +388,101 @@ export default function CreateEditPrescriptionForm({
                             )}
                         />
                         {/* Doctor Selection */}
-                        <Controller
-                            name="doctor_id"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field className="flex flex-col">
-                                    <FieldLabel>Doctor</FieldLabel>
-                                    <Popover
-                                        open={doctorOpen}
-                                        onOpenChange={setDoctorOpen}
-                                    >
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                aria-expanded={doctorOpen}
-                                                className={cn(
-                                                    "w-full justify-between",
-                                                    !field.value &&
-                                                        "text-muted-foreground"
-                                                )}
-                                            >
-                                                {field.value
-                                                    ? doctors.find(
-                                                          (doctor) =>
-                                                              doctor.id.toString() ===
-                                                              field.value
-                                                      )?.first_name +
-                                                      " " +
-                                                      doctors.find(
-                                                          (doctor) =>
-                                                              doctor.id.toString() ===
-                                                              field.value
-                                                      )?.last_name
-                                                    : "Select a doctor"}
-                                                <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                            <Command>
-                                                <CommandInput placeholder="Search doctor..." />
-                                                <CommandList>
-                                                    <CommandEmpty>
-                                                        No doctor found.
-                                                    </CommandEmpty>
-                                                    <CommandGroup>
-                                                        {doctors.map(
-                                                            (doctor) => (
-                                                                <CommandItem
-                                                                    key={
-                                                                        doctor.id
-                                                                    }
-                                                                    value={`${doctor.first_name} ${doctor.last_name}`}
-                                                                    onSelect={() => {
-                                                                        field.onChange(
-                                                                            doctor.id.toString()
-                                                                        );
-                                                                        setDoctorOpen(
-                                                                            false
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <CheckIcon
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            field.value ===
+                        {!location.pathname.includes("/doctors") && (
+                            <Controller
+                                name="doctor_id"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <Field className="flex flex-col">
+                                        <FieldLabel>Doctor</FieldLabel>
+                                        <Popover
+                                            open={doctorOpen}
+                                            onOpenChange={setDoctorOpen}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={doctorOpen}
+                                                    className={cn(
+                                                        "w-full justify-between",
+                                                        !field.value &&
+                                                            "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value
+                                                        ? doctors.find(
+                                                              (doctor) =>
+                                                                  doctor.id.toString() ===
+                                                                  field.value
+                                                          )?.first_name +
+                                                          " " +
+                                                          doctors.find(
+                                                              (doctor) =>
+                                                                  doctor.id.toString() ===
+                                                                  field.value
+                                                          )?.last_name
+                                                        : "Select a doctor"}
+                                                    <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Search doctor..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>
+                                                            No doctor found.
+                                                        </CommandEmpty>
+                                                        <CommandGroup>
+                                                            {doctors.map(
+                                                                (doctor) => (
+                                                                    <CommandItem
+                                                                        key={
+                                                                            doctor.id
+                                                                        }
+                                                                        value={`${doctor.first_name} ${doctor.last_name}`}
+                                                                        onSelect={() => {
+                                                                            field.onChange(
                                                                                 doctor.id.toString()
-                                                                                ? "opacity-100"
-                                                                                : "opacity-0"
-                                                                        )}
-                                                                    />
-                                                                    {
-                                                                        doctor.first_name
-                                                                    }{" "}
-                                                                    {
-                                                                        doctor.last_name
-                                                                    }
-                                                                </CommandItem>
-                                                            )
-                                                        )}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    )}
-                                </Field>
-                            )}
-                        />
+                                                                            );
+                                                                            setDoctorOpen(
+                                                                                false
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <CheckIcon
+                                                                            className={cn(
+                                                                                "mr-2 h-4 w-4",
+                                                                                field.value ===
+                                                                                    doctor.id.toString()
+                                                                                    ? "opacity-100"
+                                                                                    : "opacity-0"
+                                                                            )}
+                                                                        />
+                                                                        {
+                                                                            doctor.first_name
+                                                                        }{" "}
+                                                                        {
+                                                                            doctor.last_name
+                                                                        }
+                                                                    </CommandItem>
+                                                                )
+                                                            )}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                        {fieldState.invalid && (
+                                            <FieldError
+                                                errors={[fieldState.error]}
+                                            />
+                                        )}
+                                    </Field>
+                                )}
+                            />
+                        )}
+
                         {/* OLD Diagnosis Selection */}
                         {/* <Controller
                             name="diagnosis_id"

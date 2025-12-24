@@ -15,6 +15,9 @@ import { Eye } from "lucide-react";
 import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { toast } from "sonner";
+import Modal from "@/components/customComponents/Modal";
+import DoctorCreateForm from "@/components/customComponents/CreateDoctorForm";
+import DoctorUpdateForm from "@/components/customComponents/UpdateDoctorForm";
 
 // import {
 //   Card,
@@ -28,7 +31,23 @@ import { toast } from "sonner";
 
 export default function DoctorsIndex() {
     const [doctors, setDoctors] = useState([]);
+    const [createDoctorModal, setCreateDoctorModal] = useState(false);
+    const [editDoctorModal, setEditDoctorModal] = useState(null); // holds doctor object or null
     const navigate = useNavigate();
+
+    const onCreateCallback = (newDoctor) => {
+        setDoctors((prev) => [...prev, newDoctor]);
+        setCreateDoctorModal(false);
+    };
+
+    const onUpdateCallback = (updatedDoctor) => {
+        setDoctors((prev) =>
+            prev.map((doc) =>
+                doc.id === updatedDoctor.id ? updatedDoctor : doc
+            )
+        );
+        setEditDoctorModal(null);
+    };
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -47,22 +66,6 @@ export default function DoctorsIndex() {
         fetchDoctors();
     }, []);
 
-    const deleteDoctor = async (id) => {
-        const options = {
-            method: "GET",
-            url: "/doctors",
-        };
-        try {
-            let response = await axios.request(options);
-            console.log(response.data);
-            setDoctors(doctors.filter((doctor) => doctor.id !== id));
-            toast.success("Doctor deleted successfully");
-        } catch (error) {
-            console.log(error);
-            toast.error("Issue deleting doctor");
-        }
-    };
-
     const onDeleteCallBack = (id) => {
         console.log("On Delete Callback called with id:", id);
         setDoctors(doctors.filter((doctor) => doctor.id !== id));
@@ -70,11 +73,21 @@ export default function DoctorsIndex() {
 
     return (
         <div>
-            <Button asChild variant="outline" className={"mb-4 mr-auto block"}>
-                <Link size="sm" to={`/doctors/create`}>
+            <div className="mb-4 mr-auto block">
+                <Button
+                    variant="outline"
+                    onClick={() => setCreateDoctorModal(true)}
+                >
                     Create New Doctor
-                </Link>
-            </Button>
+                </Button>
+            </div>
+            <Modal
+                renderCondition={createDoctorModal}
+                onClose={() => setCreateDoctorModal(false)}
+            >
+                <DoctorCreateForm onCreateCallback={onCreateCallback} />
+            </Modal>
+
             <Table>
                 {/* <TableCaption>A list of doctors</TableCaption> */}
                 <TableHeader>
@@ -114,10 +127,7 @@ export default function DoctorsIndex() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
-                                            navigate(
-                                                `/doctors/${doctor.id}/edit`,
-                                                { state: { doctor } }
-                                            )
+                                            setEditDoctorModal(doctor.id)
                                         }
                                     >
                                         <Pencil />
@@ -129,6 +139,16 @@ export default function DoctorsIndex() {
                                     />
                                 </div>
                             </TableCell>
+                            {/* Edit Doctor Modal */}
+                            <Modal
+                                renderCondition={editDoctorModal === doctor.id}
+                                onClose={() => setEditDoctorModal(null)}
+                            >
+                                <DoctorUpdateForm
+                                    doctor={doctor}
+                                    onUpdateCallback={onUpdateCallback}
+                                />
+                            </Modal>
                         </TableRow>
                     ))}
                 </TableBody>

@@ -12,7 +12,6 @@ import Home from "@/pages/Home";
 import DoctorsIndex from "./pages/doctors/Index";
 import DoctorShow from "./pages/doctors/Show";
 import DoctorsEdit from "./pages/doctors/Edit";
-import DoctorsCreate from "./pages/doctors/Create";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import FormExamples from "@/pages/examples/Forms";
 import AppointmentsCreate from "./pages/appointments/Create";
@@ -134,10 +133,7 @@ function AppLayout() {
                                             path="/doctors/:id/edit"
                                             element={<DoctorsEdit />}
                                         />
-                                        <Route
-                                            path="/doctors/create"
-                                            element={<DoctorsCreate />}
-                                        />
+
                                         {/* Appointments */}
 
                                         <Route

@@ -8,9 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
     Card,
-    CardAction,
     CardContent,
-    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
@@ -30,20 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
-import { Calendar } from "@/components/ui/calendar";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { ChevronDownIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
 
-export default function DoctorCreateForm() {
+export default function DoctorCreateForm({ onCreateCallback }) {
     const { token } = useAuth();
-    const navigate = useNavigate();
 
     const createDoctor = async (formData) => {
         console.log("data in createDoctor:", formData);
@@ -59,13 +48,39 @@ export default function DoctorCreateForm() {
         try {
             let response = await axios.request(options);
             console.log("Single doctor create api response:", response.data);
-            navigate("/doctors", {
-                state: {
-                    type: "success",
-                    message: `Doctor "${response.data.first_name}" created`,
-                },
-            });
+            toast.success("Doctor created successfully");
+
+            if (onCreateCallback) {
+                onCreateCallback(response.data);
+            }
         } catch (err) {
+            if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: doctors.email"
+            ) {
+                form.setError("email", {
+                    type: "manual",
+                    message: "Email address already in use",
+                });
+                toast.error(
+                    "This Email address is already in use by another doctor"
+                );
+
+                return;
+            } else if (
+                err.response?.data?.message ===
+                "SQLITE_CONSTRAINT: SQLite error: UNIQUE constraint failed: doctors.phone"
+            ) {
+                form.setError("phone", {
+                    type: "manual",
+                    message: "Phone number already in use",
+                });
+                toast.error(
+                    "This phone number is already in use by another doctor"
+                );
+
+                return;
+            }
             console.error("error creating doctor:", err);
             console.error("error response data:", err.response?.data);
             console.error("error response status:", err.response?.status);
@@ -80,8 +95,8 @@ export default function DoctorCreateForm() {
 
     const formSchema = z.object({
         email: z.string().email(),
-        first_name: z.string(),
-        last_name: z.string(),
+        first_name: z.string().min(1, "First name is required."),
+        last_name: z.string().min(1, "Last name is required."),
         phone: z
             .string()
             .min(10, "Phone number must be at least 10 digits")
@@ -99,11 +114,11 @@ export default function DoctorCreateForm() {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "nichita@test.com",
-            first_name: "nichita",
-            last_name: "premadetest",
-            phone: "043111111",
-            specialisation: "Podiatrist",
+            email: "",
+            first_name: "",
+            last_name: "",
+            phone: "",
+            specialisation: "",
         },
         mode: "onChange",
     });
@@ -116,7 +131,7 @@ export default function DoctorCreateForm() {
     return (
         <Card className="w-full max-w-md mt-4">
             <CardHeader>
-                <CardTitle>Various Form Examples</CardTitle>
+                <CardTitle>Create a doctor</CardTitle>
             </CardHeader>
             <CardContent>
                 <form id="form-demo-2" onSubmit={form.handleSubmit(submitForm)}>
@@ -132,7 +147,7 @@ export default function DoctorCreateForm() {
                                     <Input
                                         id="doctor-form-email"
                                         {...field}
-                                        placeholder="nichita@example.com"
+                                        placeholder="Email"
                                         autoComplete="email"
                                         aria-invalid={fieldState.invalid}
                                     />
@@ -155,7 +170,7 @@ export default function DoctorCreateForm() {
                                     <Input
                                         id="doctor-form-first-name"
                                         {...field}
-                                        placeholder="nichita@example.com"
+                                        placeholder="First name"
                                         autoComplete="given-name"
                                         aria-invalid={fieldState.invalid}
                                     />
@@ -178,7 +193,7 @@ export default function DoctorCreateForm() {
                                     <Input
                                         id="doctor-form-last-name"
                                         {...field}
-                                        placeholder="nichita@example.com"
+                                        placeholder="Last Name"
                                         autoComplete="email"
                                         aria-invalid={fieldState.invalid}
                                     />
@@ -201,7 +216,7 @@ export default function DoctorCreateForm() {
                                     <Input
                                         id="doctor-form-phone"
                                         {...field}
-                                        placeholder="nichita@example.com"
+                                        placeholder="Phone"
                                         autoComplete="phone"
                                         aria-invalid={fieldState.invalid}
                                     />
