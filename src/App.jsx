@@ -19,6 +19,7 @@ import AppointmentsIndex from "./pages/appointments/Index";
 import PatientsIndex from "./pages/patients/Index";
 import DiagnosesIndex from "./pages/diagnoses/Index";
 import PrescriptionsIndex from "./pages/prescriptions/Index";
+import DashboardIndex from "./pages/dashboard/Index";
 
 // Main layout component
 function AppLayout() {
@@ -81,11 +82,7 @@ function AppLayout() {
                                             path="/doctors/:id/edit"
                                             element={<DoctorsEdit />}
                                         />
-                                        <Route
-                                            path="/doctors/create"
-                                            element={<DoctorsCreate />}
-                                        />
-
+                                    
                                         {/* Appointments */}
 
                                         {/* <Route
@@ -121,6 +118,15 @@ function AppLayout() {
                                         path="/"
                                         element={<ProtectedRoute />}
                                     >
+
+                                        {/* Dashboard */}
+
+                                        <Route
+                                            path="/dashboard"
+                                            element={<DashboardIndex />}
+                                        />
+
+                                        {/* Doctors */}
                                         <Route
                                             path="/doctors"
                                             element={<DoctorsIndex />}

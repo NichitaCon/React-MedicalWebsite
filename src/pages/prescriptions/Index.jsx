@@ -51,8 +51,8 @@ export default function PrescriptionsIndex() {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
-                const hydratedPrescriptions = prescriptionsRes.data.map(
-                    (prescription) => {
+                const hydratedPrescriptions = prescriptionsRes.data
+                    .map((prescription) => {
                         const patient = patientsRes.data.find(
                             (patient) => patient.id === prescription.patient_id
                         );
@@ -74,9 +74,15 @@ export default function PrescriptionsIndex() {
                             diagnosis_condition: diagnosis
                                 ? diagnosis.condition
                                 : "Unknown",
+                            status:
+                                prescription.end_date * 1000 >= Date.now()
+                                    ? "Active"
+                                    : "Expired",
                         };
-                    }
-                );
+                    })
+                    .sort(
+                        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+                    );
 
                 console.log(
                     "prescription api response:",
@@ -119,6 +125,10 @@ export default function PrescriptionsIndex() {
             diagnosis_condition: newPrescription.diagnosis
                 ? newPrescription.diagnosis.condition
                 : "Unknown",
+            status:
+                newPrescription.end_date * 1000 >= Date.now()
+                    ? "Active"
+                    : "Expired",
         };
         // setDiagnoses([...diagnoses]);
         setPrescriptions([...prescriptions, enrichedPrescription]);
@@ -146,6 +156,10 @@ export default function PrescriptionsIndex() {
             diagnosis_condition: updatedPrescription.diagnosis
                 ? updatedPrescription.diagnosis.condition
                 : "Unknown",
+            status:
+                updatedPrescription.end_date * 1000 >= Date.now()
+                    ? "Active"
+                    : "Expired",
         };
         setPrescriptions((prev) =>
             prev.map((p) =>
@@ -207,6 +221,7 @@ export default function PrescriptionsIndex() {
                         <TableHead>Dosage</TableHead>
                         <TableHead>Start Date</TableHead>
                         <TableHead>End Date</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -233,6 +248,17 @@ export default function PrescriptionsIndex() {
                                           .unix(prescription.end_date)
                                           .format("D/MM/YYYY")
                                     : "-"}
+                            </TableCell>
+                            <TableCell>
+                                {prescription.status === "Active" ? (
+                                    <span className="font-medium px-2 py-1.5 rounded-full bg-green-200">
+                                        Active
+                                    </span>
+                                ) : (
+                                    <span className="font-medium px-2 py-1.5 rounded-full bg-red-200">
+                                        Expired
+                                    </span>
+                                )}
                             </TableCell>
                             <TableCell>
                                 <div className="flex gap-2 text-right justify-end">

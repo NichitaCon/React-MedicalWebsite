@@ -17,6 +17,18 @@ export const AuthProvidor = ({ children }) => {
         }
     });
 
+    const [userData, setUserData] = useState(() => {
+        if (localStorage.getItem("token")) {
+            console.log(
+                "userData in localstorage:",
+                JSON.parse(localStorage.getItem("userData"))
+            );
+            return JSON.parse(localStorage.getItem("userData"));
+        } else {
+            return null;
+        }
+    });
+
     const onRegister = async (email, password, first_name, last_name) => {
         console.warn("onRegister Called");
 
@@ -35,6 +47,14 @@ export const AuthProvidor = ({ children }) => {
             let response = await axios.request(options);
             console.log("register api response:", response.data);
 
+            const userData = {
+                first_name: response.data.first_name,
+                last_name: response.data.last_name,
+                email: response.data.email,
+            };
+
+            console.log("userdata:", userData);
+            localStorage.setItem("userData", JSON.stringify(userData));
             localStorage.setItem("token", response.data.token);
             setToken(response.data.token);
             return { success: true, msg: "Account created!" };
@@ -45,7 +65,7 @@ export const AuthProvidor = ({ children }) => {
             );
             return {
                 success: false,
-                msg: err.response?.data?.error || "Register failed",
+                msg: err.response?.data?.message || "Register failed",
             };
         }
     };
@@ -66,7 +86,16 @@ export const AuthProvidor = ({ children }) => {
             let response = await axios.request(options);
             console.log("login api response:", response.data);
 
+            const userData = {
+                first_name: response.data.first_name,
+                last_name: response.data.last_name,
+                email: response.data.email,
+            };
+            console.log("userdata:", userData);
+            localStorage.setItem("userData", JSON.stringify(userData));
             localStorage.setItem("token", response.data.token);
+
+            setUserData(userData);
             setToken(response.data.token);
             return { success: true, msg: "Login successful!" };
         } catch (err) {
@@ -85,10 +114,12 @@ export const AuthProvidor = ({ children }) => {
         console.warn("onLogOut Called");
         setToken(null);
         localStorage.removeItem("token");
+        localStorage.removeItem("userData");
     };
 
     const value = {
         token,
+        userData,
         onLogin,
         onRegister,
         onLogOut,

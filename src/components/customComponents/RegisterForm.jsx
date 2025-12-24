@@ -129,7 +129,7 @@ export default function RegisterForm({setIsLoggingIn}) {
                                             className="py-5 px-3"
                                             id="form-example-first-name"
                                             {...field}
-                                            placeholder="John"
+                                            placeholder=""
                                             autoComplete="given-name"
                                             aria-invalid={fieldState.invalid}
                                         />
@@ -156,7 +156,7 @@ export default function RegisterForm({setIsLoggingIn}) {
                                             className="py-5 px-3"
                                             id="form-example-last-name"
                                             {...field}
-                                            placeholder="Doe"
+                                            placeholder=""
                                             autoComplete="family-name"
                                             aria-invalid={fieldState.invalid}
                                         />

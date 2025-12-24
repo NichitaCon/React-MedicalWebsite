@@ -29,8 +29,10 @@ import AppointmentDetails from "@/components/customComponents/AppointmentDetails
 //   CardTitle,
 // } from "@/components/ui/card";
 
-export default function AppointmentsIndex() {
-    const [appointments, setAppointments] = useState([]);
+export default function AppointmentsIndex({ appointmentsProp }) {
+    const [appointments, setAppointments] = useState(
+        appointmentsProp ? appointmentsProp : []
+    );
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
 
@@ -43,54 +45,83 @@ export default function AppointmentsIndex() {
     const navigate = useNavigate();
     const { token } = useAuth();
 
+    // Sync appointments state when prop changes
+    useEffect(() => {
+        if (appointmentsProp) {
+            const appointmentsWithStatus = appointmentsProp.map((appt) => ({
+                ...appt,
+                status:
+                    appt.appointment_date * 1000 < Date.now()
+                        ? "Completed"
+                        : "Upcoming",
+            }));
+            setAppointments(appointmentsWithStatus);
+        }
+    }, [appointmentsProp]);
+
     useEffect(() => {
         const fetchAll = async () => {
             console.log("fetching appointments...");
             try {
                 setLoading(true);
-                const [doctorRes, appointmentsRes, patientsRes] =
-                    await Promise.all([
-                        axios.get(`/doctors`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
-                        axios.get(`/appointments`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
 
-                        axios.get(`/patients`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
-                    ]);
-
-                // Map appointments to include patient + doctor's name
-                const appointmentsWithPatientsAndDoctors =
-                    appointmentsRes.data.map((appt) => {
-                        const patient = patientsRes.data.find(
-                            (p) => p.id === appt.patient_id
-                        );
-
-                        const doctor = doctorRes.data.find(
-                            (d) => d.id === appt.doctor_id
-                        );
-                        return {
-                            ...appt,
-                            patient_name: patient
-                                ? `${patient.first_name} ${patient.last_name}`
-                                : "Unknown",
-                            doctor_name: doctor
-                                ? `${doctor.first_name} ${doctor.last_name}`
-                                : "Unknown",
-                        };
-                    });
-
-                console.log(
-                    "appointmentsWithPatientsAndDoctors:",
-                    appointmentsWithPatientsAndDoctors
-                );
+                // Always fetch doctors and patients for create/update operations
+                const [doctorRes, patientsRes] = await Promise.all([
+                    axios.get(`/doctors`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    axios.get(`/patients`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
 
                 setDoctors(doctorRes.data);
                 setPatients(patientsRes.data);
-                setAppointments(appointmentsWithPatientsAndDoctors);
+
+                // Only fetch appointments if not provided as prop
+                if (!appointmentsProp) {
+                    const appointmentsRes = await axios.get(`/appointments`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+
+                    // Map appointments to include patient + doctor's name
+                    const appointmentsWithPatientsAndDoctors =
+                        appointmentsRes.data.map((appt) => {
+                            const patient = patientsRes.data.find(
+                                (p) => p.id === appt.patient_id
+                            );
+
+                            const doctor = doctorRes.data.find(
+                                (d) => d.id === appt.doctor_id
+                            );
+                            return {
+                                ...appt,
+                                patient_name: patient
+                                    ? `${patient.first_name} ${patient.last_name}`
+                                    : "Unknown",
+                                doctor_name: doctor
+                                    ? `${doctor.first_name} ${doctor.last_name}`
+                                    : "Unknown",
+                                status:
+                                    appt.appointment_date * 1000 < Date.now()
+                                        ? "Completed"
+                                        : "Upcoming",
+                            };
+                        })
+                        .sort((a, b) => b.appointment_date - a.appointment_date);
+
+                    console.log(
+                        "appointmentsWithPatientsAndDoctors:",
+                        appointmentsWithPatientsAndDoctors
+                    );
+
+                    setAppointments(appointmentsWithPatientsAndDoctors);
+                } else {
+                    console.log(
+                        "AppointmentsProp passed into appointmentsIndex, skipping appointments API call!"
+                    );
+                }
+
                 setLoading(false);
             } catch (error) {
                 console.log(error);
@@ -116,6 +147,10 @@ export default function AppointmentsIndex() {
             doctor_name: doctor
                 ? `${doctor.first_name} ${doctor.last_name}`
                 : "Unknown",
+            status:
+                newAppointment.appointment_date * 1000 < Date.now()
+                    ? "Completed"
+                    : "Upcoming",
         };
         console.log(enrichedAppointment);
         setAppointments([...appointments, enrichedAppointment]);
@@ -139,6 +174,10 @@ export default function AppointmentsIndex() {
             doctor_name: doctor
                 ? `${doctor.first_name} ${doctor.last_name}`
                 : "Unknown",
+            status:
+                editedAppointment.appointment_date * 1000 < Date.now()
+                    ? "Completed"
+                    : "Upcoming",
         };
 
         // Update the appointments array in state:
@@ -206,7 +245,7 @@ export default function AppointmentsIndex() {
                         <TableHead>Appointment Date</TableHead>
                         <TableHead>Patient Name</TableHead>
                         <TableHead>Doctor Name</TableHead>
-
+                        <TableHead>Status</TableHead>
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -226,7 +265,17 @@ export default function AppointmentsIndex() {
                             <TableCell>
                                 {appointment.doctor_name || "-"}
                             </TableCell>
-
+                            <TableCell>
+                                {appointment.status === "Completed" ? (
+                                    <span className=" font-medium px-2 py-1.5 rounded-full bg-green-200">
+                                        Completed
+                                    </span>
+                                ) : (
+                                    <span className="font-medium px-2 py-1.5 rounded-full bg-blue-200">
+                                        Upcoming
+                                    </span>
+                                )}
+                            </TableCell>
                             <TableCell>
                                 <div className="flex gap-2 text-right justify-end">
                                     <Button

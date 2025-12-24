@@ -31,21 +31,16 @@ export function NavMain({ items }) {
             <SidebarGroupContent className="flex flex-col gap-2">
                 <SidebarMenu>
                     <SidebarMenuItem className="flex items-center gap-2">
-                        <SidebarMenuButton
-                            tooltip="Quick Create"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-                        >
-                            <IconCirclePlusFilled />
-                            <span>Quick Create</span>
-                        </SidebarMenuButton>
-                        <Button
-                            size="icon"
-                            className="size-8 group-data-[collapsible=icon]:opacity-0"
-                            variant="outline"
-                        >
-                            <IconMail />
-                            <span className="sr-only">Inbox</span>
-                        </Button>
+                        <NavLink to={"/dashboard"} className="flex-1">
+                            <SidebarMenuButton
+                                tooltip="Quick Create"
+                                isActive={checkActive("/dashboard")}
+                                className=" text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/20 active:text-primary min-w-8 transition-all duration-100 ease-linear"
+                            >
+                                <IconCirclePlusFilled />
+                                <span>DashBoard</span>
+                            </SidebarMenuButton>
+                        </NavLink>
                     </SidebarMenuItem>
                 </SidebarMenu>
                 <SidebarMenu>

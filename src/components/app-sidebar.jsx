@@ -8,6 +8,16 @@ import {
     IconMusic,
     IconListCheck,
 } from "@tabler/icons-react";
+import {
+    CalendarDays,
+    User,
+    HeartPulse,
+    Pill,
+    NotepadText,
+    Smile,
+    Tablets,
+    ClipboardMinus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useLocation } from "react-router";
@@ -31,55 +41,55 @@ import RegisterForm from "./customComponents/RegisterForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
-const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
-    },
-    navMain: [
-        {
-            title: "Appointments",
-            url: "/appointments",
-            icon: IconDashboard,
-        },
-        {
-            title: "Doctors",
-            url: "/doctors",
-            icon: IconConfetti,
-        },
-        {
-            title: "Patients",
-            url: "/patients",
-            icon: IconTheater,
-        },
-        {
-            title: "Diagnoses",
-            url: "/diagnoses",
-            icon: IconDashboard,
-        },
-         {
-            title: "Prescriptions",
-            url: "/prescriptions",
-            icon: IconDashboard,
-        },
-    ],
-    // examples: [
-    //     {
-    //         name: "Forms & Validation",
-    //         url: "/forms",
-    //         icon: IconListCheck,
-    //     },
-    // ],
-};
-
 export function AppSidebar({ ...props }) {
     const location = useLocation();
-    const { token } = useAuth();
+    const { token, userData } = useAuth();
     const [isLoggingIn, setIsLoggingIn] = useState(true);
     console.log("token in AppSidebar() is:", token);
 
     console.log(location);
+
+    const data = {
+        user: {
+            name: userData.first_name + " " + userData.last_name,
+            email: userData.email,
+            avatar: "/avatars/shadcn.jpg",
+        },
+        navMain: [
+            {
+                title: "Doctors",
+                url: "/doctors",
+                icon: HeartPulse,
+            },
+            {
+                title: "Patients",
+                url: "/patients",
+                icon: User,
+            },
+            {
+                title: "Appointments",
+                url: "/appointments",
+                icon: CalendarDays,
+            },
+            {
+                title: "Prescriptions",
+                url: "/prescriptions",
+                icon: Tablets,
+            },
+            {
+                title: "Diagnoses",
+                url: "/diagnoses",
+                icon: ClipboardMinus,
+            },
+        ],
+        // examples: [
+        //     {
+        //         name: "Forms & Validation",
+        //         url: "/forms",
+        //         icon: IconListCheck,
+        //     },
+        // ],
+    };
 
     let message = location.state?.message;
     let type = location.state?.type;
@@ -103,20 +113,15 @@ export function AppSidebar({ ...props }) {
                 {/* here i might be able to swap out this content for login form */}
                 {token ? (
                     <>
-                        <SidebarHeader>
+                        <SidebarHeader className="pb-0!">
                             <SidebarMenu>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton
-                                        asChild
-                                        className="data-[slot=sidebar-menu-button]:!p-1.5"
-                                    >
-                                        <a href="#">
-                                            <IconInnerShadowTop className="!size-5" />
-                                            <span className="text-base font-semibold">
-                                                Acme Inc.
-                                            </span>
-                                        </a>
-                                    </SidebarMenuButton>
+                                    <div className="flex flex-row items-center">
+                                        {/* <Smile className="size-5!" /> */}
+                                        <span className="text-3xl font-semibold ml-1">
+                                            MedApi
+                                        </span>
+                                    </div>
                                 </SidebarMenuItem>
                             </SidebarMenu>
                         </SidebarHeader>
@@ -144,7 +149,11 @@ export function AppSidebar({ ...props }) {
                             </p>
                         </div>
                         {/* TODO: add loading state for login button (open the loginform component)*/}
-                        {isLoggingIn ? <LoginForm setIsLoggingIn={setIsLoggingIn} /> : <RegisterForm setIsLoggingIn={setIsLoggingIn} />}
+                        {isLoggingIn ? (
+                            <LoginForm setIsLoggingIn={setIsLoggingIn} />
+                        ) : (
+                            <RegisterForm setIsLoggingIn={setIsLoggingIn} />
+                        )}
                     </div>
                 )}
             </Sidebar>
