@@ -56,7 +56,7 @@ export default function PatientDetails({ patient, setShowPatientDetails }) {
     }, [patient]);
 
     return (
-        <Card className="w-full max-w-md px-4 py-2 shadow-lg border border-gray-200 bg-white gap-2">
+        <Card className="w-full max-w-md px-4 py-2 shadow-lg border border-accent bg-card gap-2">
             <div className="flex justify-between items-center border-b pb-2 mb-2">
                 <CardTitle className="text-lg font-semibold">
                     {patient.first_name} {patient.last_name}

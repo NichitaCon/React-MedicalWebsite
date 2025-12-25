@@ -15,6 +15,8 @@ import dayjs from "dayjs";
 import { useAuth } from "@/hooks/useAuth";
 import Modal from "@/components/customComponents/Modal";
 import CreateEditPrescriptionForm from "@/components/customComponents/CreateEditPrescriptionForm";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
+import CreateButton from "@/components/customComponents/CreateButton";
 
 export default function PrescriptionsIndex() {
     const [prescriptions, setPrescriptions] = useState([]);
@@ -179,8 +181,6 @@ export default function PrescriptionsIndex() {
         setPrescriptions(prescriptions.filter((p) => p.id !== id));
     };
 
-    if (loading) return <h1>Loading</h1>;
-
     const q = (searchQuery || "").trim().toLowerCase();
     const filteredPrescriptions = prescriptions.filter((prescription) => {
         if (!q) return true;
@@ -217,12 +217,10 @@ export default function PrescriptionsIndex() {
                         placeholder="Search prescriptions (patient, doctor, med, status, date...)"
                         className="border px-3 py-2 rounded-md w-72"
                     />
-                    <Button
-                        variant="outline"
-                        onClick={() => setShowCreatePrescriptionForm(true)}
-                    >
-                        Create New Prescription
-                    </Button>
+                    <CreateButton
+                        resourceName="Prescription"
+                        onShowForm={() => setShowCreatePrescriptionForm(true)}
+                    />
                 </div>
             </div>
 
@@ -265,64 +263,72 @@ export default function PrescriptionsIndex() {
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    {filteredPrescriptions.map((prescription) => (
-                        <TableRow key={prescription.id}>
-                            <TableCell>{prescription.patient_name}</TableCell>
-                            <TableCell>{prescription.doctor_name}</TableCell>
-                            <TableCell>
-                                {prescription.diagnosis_condition}
-                            </TableCell>
-                            <TableCell>{prescription.medication}</TableCell>
-                            <TableCell>{prescription.dosage}</TableCell>
-                            <TableCell>
-                                {prescription.start_date
-                                    ? dayjs
-                                          .unix(prescription.start_date)
-                                          .format("D/MM/YYYY")
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                {prescription.end_date
-                                    ? dayjs
-                                          .unix(prescription.end_date)
-                                          .format("D/MM/YYYY")
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                {prescription.status === "Active" ? (
-                                    <span className="font-medium px-2 py-1.5 rounded-full bg-green-200">
-                                        Active
-                                    </span>
-                                ) : (
-                                    <span className="font-medium px-2 py-1.5 rounded-full bg-red-200">
-                                        Expired
-                                    </span>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 text-right justify-end">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowEditPrescriptionForm(
-                                                prescription.id
-                                            )
-                                        }
-                                    >
-                                        <Pencil />
-                                    </Button>
-                                    <DeleteBtn
-                                        resource="prescriptions"
-                                        id={prescription.id}
-                                        onDeleteCallBack={onDeleteCallback}
-                                    />
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
+                {loading ? (
+                    <TableLoadingSkeleton columnSpan={9} />
+                ) : (
+                    <TableBody>
+                        {filteredPrescriptions.map((prescription) => (
+                            <TableRow key={prescription.id}>
+                                <TableCell>
+                                    {prescription.patient_name}
+                                </TableCell>
+                                <TableCell>
+                                    {prescription.doctor_name}
+                                </TableCell>
+                                <TableCell>
+                                    {prescription.diagnosis_condition}
+                                </TableCell>
+                                <TableCell>{prescription.medication}</TableCell>
+                                <TableCell>{prescription.dosage}</TableCell>
+                                <TableCell>
+                                    {prescription.start_date
+                                        ? dayjs
+                                              .unix(prescription.start_date)
+                                              .format("D/MM/YYYY")
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {prescription.end_date
+                                        ? dayjs
+                                              .unix(prescription.end_date)
+                                              .format("D/MM/YYYY")
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {prescription.status === "Active" ? (
+                                        <span className="font-medium px-2 py-1.5 rounded-full bg-status-active">
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span className="font-medium px-2 py-1.5 rounded-full bg-status-expired">
+                                            Expired
+                                        </span>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 text-right justify-end">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowEditPrescriptionForm(
+                                                    prescription.id
+                                                )
+                                            }
+                                        >
+                                            <Pencil />
+                                        </Button>
+                                        <DeleteBtn
+                                            resource="prescriptions"
+                                            id={prescription.id}
+                                            onDeleteCallBack={onDeleteCallback}
+                                        />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                )}
             </Table>
         </div>
     );

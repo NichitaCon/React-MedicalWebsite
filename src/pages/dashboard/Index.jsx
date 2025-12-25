@@ -194,12 +194,16 @@ export default function DashboardIndex() {
                             cardNumber={patients.length}
                             cardWeeklyTrendNumber={patientsCreatedThisWeek}
                             Icon={User}
+                            loading={loading}
+                            href="/patients"
                         />
                         <DashboardCard
                             cardTitle="Total Doctors"
                             cardNumber={doctors.length}
                             cardWeeklyTrendNumber={doctorsCreatedThisWeek}
                             Icon={HeartPulse}
+                            loading={loading}
+                             href="/doctors"
                         />
                     </div>
                     <div className="flex flex-row gap-3">
@@ -209,6 +213,8 @@ export default function DashboardIndex() {
                             cardNumber={upComingAppointments.length}
                             cardWeeklyTrendNumber={upcomingAppointmentsThisWeek}
                             Icon={CalendarDays}
+                            loading={loading}
+                             href="/appointments"
                         />
                         <DashboardCard
                             cardTitle="Active Prescriptions"
@@ -219,6 +225,8 @@ export default function DashboardIndex() {
                                     : activePrescriptionsTrend
                             }
                             Icon={Tablets}
+                            loading={loading}
+                             href="/prescriptions"
                         />
                     </div>
                 </div>

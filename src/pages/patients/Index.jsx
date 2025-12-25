@@ -17,6 +17,7 @@ import CreateEditPatientForm from "@/components/customComponents/CreateEditPatie
 import dayjs from "dayjs";
 import PatientDetails from "@/components/customComponents/PatientDetails";
 import CreateButton from "@/components/customComponents/CreateButton";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
 
 export default function PatientsIndex() {
     const [patients, setPatients] = useState([]);
@@ -65,7 +66,6 @@ export default function PatientsIndex() {
         setPatients(patients.filter((p) => p.id !== id));
     };
 
-    if (loading) return <h1>Loading</h1>;
 
     const q = (searchQuery || "").trim().toLowerCase();
     const filteredPatients = patients.filter((patient) => {
@@ -132,92 +132,104 @@ export default function PatientsIndex() {
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    {filteredPatients.map((patient) => (
-                        <TableRow key={patient.id}>
-                            <TableCell>{patient.first_name}</TableCell>
-                            <TableCell>{patient.last_name}</TableCell>
-                            <TableCell>{patient.email}</TableCell>
-                            <TableCell>{patient.phone}</TableCell>
-                            <TableCell>
-                                {dayjs
-                                    .unix(patient.date_of_birth)
-                                    .format("D/MM/YYYY")}
-                            </TableCell>
-                            <TableCell>{patient.address}</TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 text-right justify-end">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowPatientDetails(patient.id)
-                                        }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowEditPatientForm(patient.id)
-                                        }
-                                    >
-                                        <Pencil />
-                                    </Button>
-                                    <DeleteBtn
-                                        resource="patients"
-                                        id={patient.id}
-                                        onDeleteCallBack={onDeleteCallback}
-                                    />
-                                </div>
-                                {showEditPatientForm === patient.id && (
-                                    <div
-                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                                        onClick={() =>
-                                            setShowEditPatientForm(null)
-                                        }
-                                    >
-                                        <div
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="animate-in zoom-in-95 duration-200"
+                {loading ? (
+                    <TableLoadingSkeleton columnSpan={7} />
+                ) : (
+                    <TableBody>
+                        {filteredPatients.map((patient) => (
+                            <TableRow key={patient.id}>
+                                <TableCell>{patient.first_name}</TableCell>
+                                <TableCell>{patient.last_name}</TableCell>
+                                <TableCell>{patient.email}</TableCell>
+                                <TableCell>{patient.phone}</TableCell>
+                                <TableCell>
+                                    {dayjs
+                                        .unix(patient.date_of_birth)
+                                        .format("D/MM/YYYY")}
+                                </TableCell>
+                                <TableCell>{patient.address}</TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 text-right justify-end">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowPatientDetails(
+                                                    patient.id
+                                                )
+                                            }
                                         >
-                                            <CreateEditPatientForm
-                                                patient={patient}
-                                                onUpdateCallback={
-                                                    onUpdateCallback
-                                                }
-                                                setShowPatientForm={
-                                                    setShowEditPatientForm
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                                {showPatientDetails === patient.id && (
-                                    <div
-                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                                        onClick={() =>
-                                            setShowPatientDetails(null)
-                                        }
-                                    >
-                                        <div
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="animate-in zoom-in-95 duration-200"
+                                            <Eye />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowEditPatientForm(
+                                                    patient.id
+                                                )
+                                            }
                                         >
-                                            <PatientDetails
-                                                setShowPatientDetails={
-                                                    setShowPatientDetails
-                                                }
-                                                patient={patient}
-                                            />
-                                        </div>
+                                            <Pencil />
+                                        </Button>
+                                        <DeleteBtn
+                                            resource="patients"
+                                            id={patient.id}
+                                            onDeleteCallBack={onDeleteCallback}
+                                        />
                                     </div>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
+                                    {showEditPatientForm === patient.id && (
+                                        <div
+                                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                            onClick={() =>
+                                                setShowEditPatientForm(null)
+                                            }
+                                        >
+                                            <div
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                                className="animate-in zoom-in-95 duration-200"
+                                            >
+                                                <CreateEditPatientForm
+                                                    patient={patient}
+                                                    onUpdateCallback={
+                                                        onUpdateCallback
+                                                    }
+                                                    setShowPatientForm={
+                                                        setShowEditPatientForm
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                    {showPatientDetails === patient.id && (
+                                        <div
+                                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                            onClick={() =>
+                                                setShowPatientDetails(null)
+                                            }
+                                        >
+                                            <div
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                                className="animate-in zoom-in-95 duration-200"
+                                            >
+                                                <PatientDetails
+                                                    setShowPatientDetails={
+                                                        setShowPatientDetails
+                                                    }
+                                                    patient={patient}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                )}
             </Table>
         </div>
     );

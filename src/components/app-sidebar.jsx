@@ -49,11 +49,14 @@ export function AppSidebar({ ...props }) {
 
     console.log(location);
 
+    const user = userData || {};
     const data = {
         user: {
-            name: userData.first_name + " " + userData.last_name,
-            email: userData.email,
+            wholeName: (user.first_name || "") + " " + (user.last_name || ""),
+            email: user.email || "",
             avatar: "/avatars/shadcn.jpg",
+            first_name: user.first_name || "",
+            last_name: user.last_name || "",
         },
         navMain: [
             {
@@ -135,12 +138,12 @@ export function AppSidebar({ ...props }) {
                         </SidebarFooter>
                     </>
                 ) : (
-                    <div className="p-4 flex flex-col justify-between h-full">
+                    <div className="p-4 flex flex-col justify-between h-full bg-white rounded-2xl">
                         <div>
-                            <h1 className="text-5xl font-semibold mb-2">
+                            <h1 className="text-5xl font-semibold mb-2 text-black">
                                 Welcome to MedApi
                             </h1>
-                            <p>
+                            <p className="text-gray-600">
                                 MedApi is a simple React app used for managing
                                 doctor appointments, patients and prescriptions,
                                 MedApi also serves as a demonstration of

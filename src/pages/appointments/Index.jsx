@@ -20,6 +20,8 @@ import dayjs from "dayjs";
 import CreateEditAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
 import AppointmentDetails from "@/components/customComponents/AppointmentDetails";
 import CreateButton from "@/components/customComponents/CreateButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
 
 // import {
 //   Card,
@@ -127,13 +129,14 @@ export default function AppointmentsIndex({
                     );
 
                     setAppointments(appointmentsWithPatientsAndDoctors);
+                    setLoading(false);
                 } else {
                     console.log(
                         "AppointmentsProp passed into appointmentsIndex, skipping appointments API call!"
                     );
-                }
 
-                setLoading(false);
+                    setTimeout(() => setLoading(false), 500);
+                }
             } catch (error) {
                 console.log(error);
                 setLoading(false);
@@ -219,14 +222,6 @@ export default function AppointmentsIndex({
 
     console.log("Viewing appointments Index");
 
-    if (loading) {
-        return (
-            <>
-                <h1>Loading</h1>
-            </>
-        );
-    }
-
     const q = (searchQuery || "").trim().toLowerCase();
     const filteredAppointments = appointments.filter((appointment) => {
         if (!q) return true;
@@ -294,123 +289,133 @@ export default function AppointmentsIndex({
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    {filteredAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                            <TableCell>
-                                {appointment.appointment_date
-                                    ? dayjs
-                                          .unix(appointment.appointment_date)
-                                          .format("M/D/YYYY, h:mm:ss A")
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                {appointment.patient_name || "-"}
-                            </TableCell>
-                            <TableCell>
-                                {appointment.doctor_name || "-"}
-                            </TableCell>
-                            <TableCell>
-                                {appointment.status === "Completed" ? (
-                                    <span className=" font-medium px-2 py-1.5 rounded-full bg-green-200">
-                                        Completed
-                                    </span>
-                                ) : (
-                                    <span className="font-medium px-2 py-1.5 rounded-full bg-blue-200">
-                                        Upcoming
-                                    </span>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 text-right justify-end">
-                                    <Button
-                                        className={`${
-                                            showAppointmentDetails ===
-                                            appointment.id
-                                                ? "cursor-default"
-                                                : "cursor-pointer hover:border-blue-500"
-                                        }`}
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowAppointmentDetails(
+                {loading ? (
+                    <TableLoadingSkeleton columnSpan={5} />
+                ) : (
+                    <TableBody>
+                        {filteredAppointments.map((appointment) => (
+                            <TableRow key={appointment.id}>
+                                <TableCell>
+                                    {appointment.appointment_date
+                                        ? dayjs
+                                              .unix(
+                                                  appointment.appointment_date
+                                              )
+                                              .format("M/D/YYYY, h:mm:ss A")
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {appointment.patient_name || "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {appointment.doctor_name || "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {appointment.status === "Completed" ? (
+                                        <span className=" font-medium px-2 py-1.5 rounded-full bg-status-completed">
+                                            Completed
+                                        </span>
+                                    ) : (
+                                        <span className="font-medium px-2 py-1.5 rounded-full bg-status-upcoming">
+                                            Upcoming
+                                        </span>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 text-right justify-end">
+                                        <Button
+                                            className={`${
+                                                showAppointmentDetails ===
                                                 appointment.id
-                                            )
-                                        }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        className="cursor-pointer hover:border-blue-500"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowEditAppointmentForm(
-                                                appointment.id
-                                            )
-                                        }
-                                    >
-                                        <Pencil />
+                                                    ? "cursor-default"
+                                                    : "cursor-pointer hover:border-blue-500"
+                                            }`}
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowAppointmentDetails(
+                                                    appointment.id
+                                                )
+                                            }
+                                        >
+                                            <Eye />
+                                        </Button>
+                                        <Button
+                                            className="cursor-pointer hover:border-blue-500"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowEditAppointmentForm(
+                                                    appointment.id
+                                                )
+                                            }
+                                        >
+                                            <Pencil />
 
-                                        {/* EDITAPPOINTMENT */}
-                                        {/* DONT GET CONFUSED here is where im using the form in the edit config */}
-                                    </Button>
-                                    <DeleteBtn
-                                        onDeleteCallBack={onDeleteCallBack}
-                                        resource="appointments"
-                                        id={appointment.id}
-                                    />
-                                </div>
-                            </TableCell>
-                            {showAppointmentDetails === appointment.id && (
-                                <div
-                                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                                    onClick={() => {
-                                        console.log(
-                                            "outside has been clicked",
-                                            showAppointmentDetails
-                                        );
-                                        setShowAppointmentDetails(null);
-                                    }}
-                                >
-                                    <div
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="animate-in zoom-in-95 duration-200"
-                                    >
-                                        <AppointmentDetails
-                                            appointment={appointment}
-                                            setShowAppointmentDetails={
-                                                setShowAppointmentDetails
-                                            }
+                                            {/* EDITAPPOINTMENT */}
+                                            {/* DONT GET CONFUSED here is where im using the form in the edit config */}
+                                        </Button>
+                                        <DeleteBtn
+                                            onDeleteCallBack={onDeleteCallBack}
+                                            resource="appointments"
+                                            id={appointment.id}
                                         />
                                     </div>
-                                </div>
-                            )}
-                            {showEditAppointmentForm === appointment.id && (
-                                <div
-                                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-                                    onClick={() =>
-                                        setShowEditAppointmentForm(null)
-                                    }
-                                >
+                                </TableCell>
+                                {showAppointmentDetails === appointment.id && (
                                     <div
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="animate-in zoom-in-95 duration-200"
+                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                        onClick={() => {
+                                            console.log(
+                                                "outside has been clicked",
+                                                showAppointmentDetails
+                                            );
+                                            setShowAppointmentDetails(null);
+                                        }}
                                     >
-                                        <CreateEditAppointmentForm
-                                            appointment={appointment}
-                                            setShowAppointmentForm={
-                                                setShowEditAppointmentForm
-                                            }
-                                            onCreateCallback={onCreateCallback}
-                                            onUpdateCallback={onUpdateCallBack}
-                                        />
+                                        <div
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="animate-in zoom-in-95 duration-200"
+                                        >
+                                            <AppointmentDetails
+                                                appointment={appointment}
+                                                setShowAppointmentDetails={
+                                                    setShowAppointmentDetails
+                                                }
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </TableRow>
-                    ))}
-                </TableBody>
+                                )}
+                                {showEditAppointmentForm === appointment.id && (
+                                    <div
+                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                                        onClick={() =>
+                                            setShowEditAppointmentForm(null)
+                                        }
+                                    >
+                                        <div
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="animate-in zoom-in-95 duration-200"
+                                        >
+                                            <CreateEditAppointmentForm
+                                                appointment={appointment}
+                                                setShowAppointmentForm={
+                                                    setShowEditAppointmentForm
+                                                }
+                                                onCreateCallback={
+                                                    onCreateCallback
+                                                }
+                                                onUpdateCallback={
+                                                    onUpdateCallBack
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                )}
             </Table>
         </div>
     );

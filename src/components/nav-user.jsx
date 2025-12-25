@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
 
 import {
     IconCreditCard,
@@ -24,12 +25,37 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { CloudMoon, Moon, Sun } from "lucide-react";
 // import { useNavigate } from "react-router";
 
 export function NavUser({ user }) {
     const { isMobile } = useSidebar();
     const { onLogOut } = useAuth();
+    const [isDark, setIsDark] = useState(false);
     // const navigate = useNavigate()
+
+    useEffect(() => {
+        const theme = localStorage.getItem("theme");
+        const prefersDark =
+            theme === "dark" ||
+            (!theme &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches);
+        setIsDark(prefersDark);
+        document.documentElement.classList.toggle("dark", prefersDark);
+    }, []);
+
+    const toggleTheme = () => {
+        const newIsDark = !isDark;
+        setIsDark(newIsDark);
+        document.documentElement.classList.toggle("dark", newIsDark);
+        localStorage.setItem("theme", newIsDark ? "dark" : "light");
+    };
+
+    const getInitials = (u) =>
+        (
+            (String(u.first_name || "")[0] || "") +
+            (String(u.last_name || "")[0] || "")
+        ).toUpperCase();
 
     return (
         <SidebarMenu>
@@ -43,15 +69,15 @@ export function NavUser({ user }) {
                             <Avatar className="h-8 w-8 rounded-lg grayscale">
                                 <AvatarImage
                                     src={user.avatar}
-                                    alt={user.name}
+                                    alt={user.wholeName}
                                 />
                                 <AvatarFallback className="rounded-lg">
-                                    CN
+                                    {getInitials(user)}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-medium">
-                                    {user.name}
+                                    {user.wholeName}
                                 </span>
                                 <span className="text-muted-foreground truncate text-xs">
                                     {user.email}
@@ -71,15 +97,15 @@ export function NavUser({ user }) {
                                 <Avatar className="h-8 w-8 rounded-lg">
                                     <AvatarImage
                                         src={user.avatar}
-                                        alt={user.name}
+                                        alt={user.wholeName}
                                     />
                                     <AvatarFallback className="rounded-lg">
-                                        CN
+                                        {getInitials(user)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-medium">
-                                        {user.name}
+                                        {user.wholeName}
                                     </span>
                                     <span className="text-muted-foreground truncate text-xs">
                                         {user.email}
@@ -88,6 +114,10 @@ export function NavUser({ user }) {
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={toggleTheme}>
+                            {isDark ? <Sun /> : <Moon />}
+                            {isDark ? "Light Mode" : "Dark Mode"}
+                        </DropdownMenuItem>
 
                         <DropdownMenuItem
                             onClick={() => {

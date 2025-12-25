@@ -26,6 +26,8 @@ import CreateAppointmentForm from "@/components/customComponents/CreateEditAppoi
 import CreateEditPrescriptionForm from "@/components/customComponents/CreateEditPrescriptionForm";
 import Modal from "@/components/customComponents/Modal";
 import CreateEditDiagnosisForm from "@/components/customComponents/CreateEditDiagnosisForm";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DoctorShow() {
     const { id } = useParams();
@@ -168,11 +170,10 @@ export default function DoctorShow() {
                     diagnoses: diagnosesWithPatients,
                 });
                 setPatients(patientsRes.data);
-                setLoading(false);
             } catch (error) {
                 console.log(error);
-                setLoading(false);
             }
+            setLoading(false);
         };
 
         fetchAll();
@@ -192,14 +193,15 @@ export default function DoctorShow() {
                 </div>
             );
         } else {
-            setHeaderContent(<></>);
+            setHeaderContent(
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="w-[200px] h-[36px]" />
+                    <Skeleton className="w-[150px] h-[28px]" />
+                </div>
+            );
         }
         return () => setHeaderContent(null);
     }, [doctor, loading]);
-
-    if (loading || !doctor) {
-        return <h1>LOADING</h1>;
-    }
 
     const onCreateCallback = (newAppointment) => {
         console.log("OnCreateCallback Pinged in doctors", newAppointment);
@@ -418,12 +420,19 @@ export default function DoctorShow() {
                         </button>
                     )}
                 </div>
-                <div className="h-full bg-gray-100 rounded-lg">
-                    {/* APPOINTMENTS */}
+                <div className="h-full bg-secondary rounded-lg">
+                    {loading || !doctor ? (
+                        <TableLoadingSkeleton columnSpan={5} />
+                    ) : (
+                        <>
+                            {/* APPOINTMENTS */}
 
-                    <TabsContent value="appointments" className=" h-full">
-                        <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
-                            {/* <TableHeader>
+                            <TabsContent
+                                value="appointments"
+                                className=" h-full"
+                            >
+                                <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
+                                    {/* <TableHeader>
                                 <TableRow>
                                     <TableHead>Appointment ID</TableHead>
                                     <TableHead>Date</TableHead>
@@ -432,190 +441,209 @@ export default function DoctorShow() {
                                     <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader> */}
-                            <TableBody>
-                                {doctor.appointments?.map((appointment) => (
-                                    <TableRow key={appointment.id}>
-                                        <TableCell className="bg-white rounded-l-sm">
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Patient:
-                                                </p>
-                                                <p className="text-xl font-medium">
-                                                    {appointment.patient_name}
-                                                </p>
-                                            </div>
-                                        </TableCell>
+                                    <TableBody>
+                                        {doctor.appointments?.map(
+                                            (appointment) => (
+                                                <TableRow key={appointment.id}>
+                                                    <TableCell className="bg-background rounded-l-sm">
+                                                        <div>
+                                                            <p className="text-sm text-gray-500">
+                                                                Patient:
+                                                            </p>
+                                                            <p className="text-xl font-medium">
+                                                                {
+                                                                    appointment.patient_name
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
 
-                                        <TableCell className="bg-white rounded-r-sm text-right">
-                                            <div className="flex gap-2 justify-end items-center">
-                                                <div className="flex flex-col text-right">
-                                                    <p className="text-blue-600 font-medium">
-                                                        {new Date(
-                                                            appointment.appointment_date *
-                                                                1000
-                                                        ).toLocaleTimeString(
-                                                            [],
-                                                            {
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            }
-                                                        )}
-                                                    </p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {new Date(
-                                                            appointment.appointment_date *
-                                                                1000
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                </div>
+                                                    <TableCell className="bg-background rounded-r-sm text-right">
+                                                        <div className="flex gap-2 justify-end items-center">
+                                                            <div className="flex flex-col text-right">
+                                                                <p className="text-blue-500 font-medium">
+                                                                    {new Date(
+                                                                        appointment.appointment_date *
+                                                                            1000
+                                                                    ).toLocaleTimeString(
+                                                                        [],
+                                                                        {
+                                                                            hour: "2-digit",
+                                                                            minute: "2-digit",
+                                                                        }
+                                                                    )}
+                                                                </p>
+                                                                <p className="text-sm text-gray-500">
+                                                                    {new Date(
+                                                                        appointment.appointment_date *
+                                                                            1000
+                                                                    ).toLocaleDateString()}
+                                                                </p>
+                                                            </div>
 
-                                                <div className="relative">
-                                                    <Button
-                                                        className="cursor-pointer hover:border-blue-500"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={() =>
-                                                            setEditingAppointmentId(
-                                                                editingAppointmentId ===
+                                                            <div className="relative">
+                                                                <Button
+                                                                    className="cursor-pointer hover:border-blue-500"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    onClick={() =>
+                                                                        setEditingAppointmentId(
+                                                                            editingAppointmentId ===
+                                                                                appointment.id
+                                                                                ? null
+                                                                                : appointment.id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <PencilIcon />
+                                                                </Button>
+
+                                                                {editingAppointmentId ===
+                                                                    appointment.id && (
+                                                                    <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
+                                                                        <EditAppointmentDateCard
+                                                                            appointment={
+                                                                                appointment
+                                                                            }
+                                                                            setEditingAppointmentId={
+                                                                                setEditingAppointmentId
+                                                                            }
+                                                                            onUpdateCallBack={
+                                                                                onUpdateCallBack
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <DeleteBtn
+                                                                resource="appointments"
+                                                                id={
                                                                     appointment.id
-                                                                    ? null
-                                                                    : appointment.id
-                                                            )
-                                                        }
-                                                    >
-                                                        <PencilIcon />
-                                                    </Button>
-
-                                                    {editingAppointmentId ===
-                                                        appointment.id && (
-                                                        <div className="absolute top-full right-0 z-50 mt-2 w-auto min-w-[300px]">
-                                                            <EditAppointmentDateCard
-                                                                appointment={
-                                                                    appointment
                                                                 }
-                                                                setEditingAppointmentId={
-                                                                    setEditingAppointmentId
-                                                                }
-                                                                onUpdateCallBack={
-                                                                    onUpdateCallBack
+                                                                onDeleteCallBack={
+                                                                    onDeleteCallBack
                                                                 }
                                                             />
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <DeleteBtn
-                                                    resource="appointments"
-                                                    id={appointment.id}
-                                                    onDeleteCallBack={
-                                                        onDeleteCallBack
-                                                    }
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TabsContent>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TabsContent>
 
-                    {/* PRESCRIPTIONS */}
+                            {/* PRESCRIPTIONS */}
 
-                    <TabsContent value="prescriptions" className="h-full">
-                        <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
-                            <TableBody>
-                                {doctor.prescriptions?.map((prescription) => (
-                                    <TableRow key={prescription.id}>
-                                        <TableCell className="bg-white rounded-l-sm">
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Patient:
-                                                </p>
-                                                <p className="text-xl font-medium">
-                                                    {prescription.patient_name}
-                                                </p>
-                                            </div>
-                                        </TableCell>
+                            <TabsContent
+                                value="prescriptions"
+                                className="h-full"
+                            >
+                                <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
+                                    <TableBody>
+                                        {doctor.prescriptions?.map(
+                                            (prescription) => (
+                                                <TableRow key={prescription.id}>
+                                                    <TableCell className="bg-background rounded-l-sm">
+                                                        <div>
+                                                            <p className="text-sm text-gray-500">
+                                                                Patient:
+                                                            </p>
+                                                            <p className="text-xl font-medium">
+                                                                {
+                                                                    prescription.patient_name
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
 
-                                        <TableCell className="bg-white">
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Medication:
-                                                </p>
-                                                <p className="text-lg font-medium">
-                                                    {prescription.medication}
-                                                </p>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    {prescription.dosage}
-                                                </p>
-                                            </div>
-                                        </TableCell>
+                                                    <TableCell className="bg-background">
+                                                        <div>
+                                                            <p className="text-sm text-gray-500">
+                                                                Medication:
+                                                            </p>
+                                                            <p className="text-lg font-medium">
+                                                                {
+                                                                    prescription.medication
+                                                                }
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 mt-1">
+                                                                {
+                                                                    prescription.dosage
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
 
-                                        <TableCell className="bg-white rounded-r-sm text-right">
-                                            <div className="flex gap-2 justify-end items-center">
-                                                <div className="flex flex-col text-right">
-                                                    <p className="text-sm text-gray-500">
-                                                        Start Date:
-                                                    </p>
-                                                    <p className="text-sm font-medium">
-                                                        {new Date(
-                                                            prescription.start_date *
-                                                                1000
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                    <p className="text-sm text-gray-500 mt-2">
-                                                        End Date:
-                                                    </p>
-                                                    <p className="text-sm font-medium">
-                                                        {new Date(
-                                                            prescription.end_date *
-                                                                1000
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <Button
-                                                    className="cursor-pointer hover:border-blue-500"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        setShowEditPrescriptionForm(
-                                                            prescription.id
-                                                        )
-                                                    }
-                                                >
-                                                    <Pencil />
-                                                </Button>
-                                                <Button
-                                                    className="cursor-pointer hover:border-blue-500"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/prescriptions/${prescription.id}`
-                                                        )
-                                                    }
-                                                >
-                                                    <Eye />
-                                                </Button>
-                                                <DeleteBtn
-                                                    resource="prescriptions"
-                                                    id={prescription.id}
-                                                    onDeleteCallBack={
-                                                        onPrescriptionDeleteCallBack
-                                                    }
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TabsContent>
+                                                    <TableCell className="bg-background rounded-r-sm text-right">
+                                                        <div className="flex gap-2 justify-end items-center">
+                                                            <div className="flex flex-col text-right">
+                                                                <p className="text-sm text-gray-500">
+                                                                    Start Date:
+                                                                </p>
+                                                                <p className="text-sm font-medium">
+                                                                    {new Date(
+                                                                        prescription.start_date *
+                                                                            1000
+                                                                    ).toLocaleDateString()}
+                                                                </p>
+                                                                <p className="text-sm text-gray-500 mt-2">
+                                                                    End Date:
+                                                                </p>
+                                                                <p className="text-sm font-medium">
+                                                                    {new Date(
+                                                                        prescription.end_date *
+                                                                            1000
+                                                                    ).toLocaleDateString()}
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                className="cursor-pointer hover:border-blue-500"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    setShowEditPrescriptionForm(
+                                                                        prescription.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Pencil />
+                                                            </Button>
+                                                            {/* <Button
+                                                                className="cursor-pointer hover:border-blue-500"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    navigate(
+                                                                        `/prescriptions/${prescription.id}`
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Eye />
+                                                            </Button> */}
+                                                            <DeleteBtn
+                                                                resource="prescriptions"
+                                                                id={
+                                                                    prescription.id
+                                                                }
+                                                                onDeleteCallBack={
+                                                                    onPrescriptionDeleteCallBack
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TabsContent>
 
-                    {/* DIAGNOSES */}
+                            {/* DIAGNOSES */}
 
-                    <TabsContent value="diagnoses" className=" h-full">
-                        <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
-                            {/* <TableHeader>
+                            <TabsContent value="diagnoses" className=" h-full">
+                                <Table className="border-separate border-spacing-y-2 p-2 -mt-1">
+                                    {/* <TableHeader>
                                 <TableRow>
                                     <TableHead>Appointment ID</TableHead>
                                     <TableHead>Date</TableHead>
@@ -624,149 +652,161 @@ export default function DoctorShow() {
                                     <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader> */}
-                            <TableBody>
-                                {doctor.diagnoses?.map((diagnosis) => (
-                                    <TableRow key={diagnosis.id}>
-                                        <TableCell className="bg-white rounded-l-sm">
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Patient:
-                                                </p>
-                                                <p className="text-xl font-medium">
-                                                    {diagnosis.patient_name}
-                                                </p>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="bg-white rounded-l-sm">
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Condition:
-                                                </p>
-                                                <p className="text-xl font-medium">
-                                                    {diagnosis.condition}
-                                                </p>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="bg-white rounded-r-sm text-right">
-                                            <div className="flex gap-2 justify-end items-center">
-                                                <div className="flex flex-col text-right">
-                                                    <p className="text-blue-600 font-medium">
-                                                        {new Date(
-                                                            diagnosis.diagnosis_date *
-                                                                1000
-                                                        ).toLocaleTimeString(
-                                                            [],
+                                    <TableBody>
+                                        {doctor.diagnoses?.map((diagnosis) => (
+                                            <TableRow key={diagnosis.id}>
+                                                <TableCell className="bg-background rounded-l-sm">
+                                                    <div>
+                                                        <p className="text-sm text-gray-500">
+                                                            Patient:
+                                                        </p>
+                                                        <p className="text-xl font-medium">
                                                             {
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
+                                                                diagnosis.patient_name
                                                             }
-                                                        )}
-                                                    </p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {new Date(
-                                                            diagnosis.diagnosis_date *
-                                                                1000
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <div className="relative">
-                                                    <Button
-                                                        className="cursor-pointer hover:border-blue-500"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={() =>
-                                                            setShowEditDiagnosisForm(
-                                                                diagnosis.id
-                                                            )
-                                                        }
-                                                    >
-                                                        <PencilIcon />
-                                                    </Button>
-                                                </div>
-                                                <DeleteBtn
-                                                    resource="diagnoses"
-                                                    id={diagnosis.id}
-                                                    onDeleteCallBack={
-                                                        onDiagnosisDeleteCallBack
-                                                    }
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TabsContent>
+                                                        </p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="bg-background rounded-l-sm">
+                                                    <div>
+                                                        <p className="text-sm text-gray-500">
+                                                            Condition:
+                                                        </p>
+                                                        <p className="text-xl font-medium">
+                                                            {
+                                                                diagnosis.condition
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="bg-background rounded-r-sm text-right">
+                                                    <div className="flex gap-2 justify-end items-center">
+                                                        <div className="flex flex-col text-right">
+                                                            <p className="text-blue-500 font-medium">
+                                                                {new Date(
+                                                                    diagnosis.diagnosis_date *
+                                                                        1000
+                                                                ).toLocaleTimeString(
+                                                                    [],
+                                                                    {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    }
+                                                                )}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {new Date(
+                                                                    diagnosis.diagnosis_date *
+                                                                        1000
+                                                                ).toLocaleDateString()}
+                                                            </p>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <Button
+                                                                className="cursor-pointer hover:border-blue-500"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    setShowEditDiagnosisForm(
+                                                                        diagnosis.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                <PencilIcon />
+                                                            </Button>
+                                                        </div>
+                                                        <DeleteBtn
+                                                            resource="diagnoses"
+                                                            id={diagnosis.id}
+                                                            onDeleteCallBack={
+                                                                onDiagnosisDeleteCallBack
+                                                            }
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TabsContent>
+                        </>
+                    )}
                 </div>
             </Tabs>
 
-            {/* CreateAppointment modal */}
-            <Modal
-                renderCondition={showAppointmentForm}
-                onClose={() => setShowAppointmentForm(false)}
-            >
-                <CreateAppointmentForm
-                    doctor={doctor}
-                    patients={patients}
-                    onCreateCallback={onCreateCallback}
-                    setShowAppointmentForm={setShowAppointmentForm}
-                />
-            </Modal>
-            {/* Create Prescription Modal*/}
-            <Modal
-                renderCondition={showPrescriptionForm}
-                onClose={() => setShowPrescriptionForm(false)}
-            >
-                <CreateEditPrescriptionForm
-                    doctor={doctor}
-                    onCreateCallback={onPrescriptionCreateCallback}
-                    setShowPrescriptionForm={setShowPrescriptionForm}
-                />
-            </Modal>
+            {!loading && (
+                <>
+                    {/* CreateAppointment modal */}
+                    <Modal
+                        renderCondition={showAppointmentForm}
+                        onClose={() => setShowAppointmentForm(false)}
+                    >
+                        <CreateAppointmentForm
+                            doctor={doctor}
+                            patients={patients}
+                            onCreateCallback={onCreateCallback}
+                            setShowAppointmentForm={setShowAppointmentForm}
+                        />
+                    </Modal>
+                    {/* Create Prescription Modal*/}
+                    <Modal
+                        renderCondition={showPrescriptionForm}
+                        onClose={() => setShowPrescriptionForm(false)}
+                    >
+                        <CreateEditPrescriptionForm
+                            doctor={doctor}
+                            onCreateCallback={onPrescriptionCreateCallback}
+                            setShowPrescriptionForm={setShowPrescriptionForm}
+                        />
+                    </Modal>
 
-            {/* Edit Prescription Modal */}
-            <Modal
-                renderCondition={!!showEditPrescriptionForm}
-                onClose={() => setShowEditPrescriptionForm(null)}
-            >
-                <CreateEditPrescriptionForm
-                    prescription={doctor.prescriptions.find(
-                        (p) => p.id === showEditPrescriptionForm
-                    )}
-                    doctor={doctor}
-                    onUpdateCallback={onPrescriptionUpdateCallback}
-                    setShowPrescriptionForm={setShowEditPrescriptionForm}
-                />
-            </Modal>
+                    {/* Edit Prescription Modal */}
+                    <Modal
+                        renderCondition={!!showEditPrescriptionForm}
+                        onClose={() => setShowEditPrescriptionForm(null)}
+                    >
+                        <CreateEditPrescriptionForm
+                            prescription={doctor?.prescriptions?.find(
+                                (p) => p.id === showEditPrescriptionForm
+                            )}
+                            doctor={doctor}
+                            onUpdateCallback={onPrescriptionUpdateCallback}
+                            setShowPrescriptionForm={
+                                setShowEditPrescriptionForm
+                            }
+                        />
+                    </Modal>
 
-            {/* Create Diagnosis Modal */}
-            <Modal
-                renderCondition={showDiagnosisForm}
-                onClose={() => setShowDiagnosisForm(false)}
-            >
-                <CreateEditDiagnosisForm
-                    doctor={doctor}
-                    patients={patients}
-                    onCreateCallback={onDiagnosisCreateCallback}
-                    setShowDiagnosisForm={setShowDiagnosisForm}
-                />
-            </Modal>
+                    {/* Create Diagnosis Modal */}
+                    <Modal
+                        renderCondition={showDiagnosisForm}
+                        onClose={() => setShowDiagnosisForm(false)}
+                    >
+                        <CreateEditDiagnosisForm
+                            doctor={doctor}
+                            patients={patients}
+                            onCreateCallback={onDiagnosisCreateCallback}
+                            setShowDiagnosisForm={setShowDiagnosisForm}
+                        />
+                    </Modal>
 
-            {/* Edit Diagnosis Modal */}
-            <Modal
-                renderCondition={!!showEditDiagnosisForm}
-                onClose={() => setShowEditDiagnosisForm(null)}
-            >
-                <CreateEditDiagnosisForm
-                    diagnosis={doctor.diagnoses?.find(
-                        (d) => d.id === showEditDiagnosisForm
-                    )}
-                    doctor={doctor}
-                    patients={patients}
-                    onUpdateCallback={onDiagnosisUpdateCallback}
-                    setShowDiagnosisForm={setShowEditDiagnosisForm}
-                />
-            </Modal>
+                    {/* Edit Diagnosis Modal */}
+                    <Modal
+                        renderCondition={!!showEditDiagnosisForm}
+                        onClose={() => setShowEditDiagnosisForm(null)}
+                    >
+                        <CreateEditDiagnosisForm
+                            diagnosis={doctor?.diagnoses?.find(
+                                (d) => d.id === showEditDiagnosisForm
+                            )}
+                            doctor={doctor}
+                            patients={patients}
+                            onUpdateCallback={onDiagnosisUpdateCallback}
+                            setShowDiagnosisForm={setShowEditDiagnosisForm}
+                        />
+                    </Modal>
+                </>
+            )}
         </div>
     );
 }

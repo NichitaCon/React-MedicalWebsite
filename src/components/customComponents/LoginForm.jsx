@@ -18,16 +18,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
+import { Spinner } from "../ui/spinner";
 
-export default function LoginForm({setIsLoggingIn}) {
+export default function LoginForm({ setIsLoggingIn }) {
     const { onLogin } = useAuth();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false)
 
     const formSchema = z.object({
         email: z.email(),
         password: z
             .string()
-            .min(8, "Password needs to be minimum 8 characters :P")
+            .min(8, "Password needs to be minimum 8 characters")
             .max(30, "maximum characters is 30"),
     });
 
@@ -42,19 +44,22 @@ export default function LoginForm({setIsLoggingIn}) {
 
     const submitForm = async (data) => {
         console.log("submitform data:", data);
+        setLoading(true)
 
         let response = await onLogin(data.email, data.password);
         if (response?.msg) {
+        setLoading(false)
+
             toast(response.msg, {
                 description: response.success
                     ? "You're now logged in"
                     : "Please try again",
                 duration: 3000,
             });
-            
+
             // Redirect to appointments page on successful login
             if (response.success) {
-                navigate("/appointments");
+                navigate("/dashboard");
             }
         }
     };
@@ -77,12 +82,12 @@ export default function LoginForm({setIsLoggingIn}) {
                                 <Field className="gap-1">
                                     <FieldLabel
                                         htmlFor="form-example-email"
-                                        className="text-md font-normal"
+                                        className="text-md font-normal text-gray-900"
                                     >
                                         Email
                                     </FieldLabel>
                                     <Input
-                                        className="py-5 px-3"
+                                        className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                         id="form-example-email"
                                         {...field}
                                         placeholder="nichita@example.com"
@@ -104,12 +109,12 @@ export default function LoginForm({setIsLoggingIn}) {
                                 <Field className="gap-1">
                                     <FieldLabel
                                         htmlFor="form-example-password"
-                                        className="text-md font-normal"
+                                        className="text-md font-normal text-gray-900"
                                     >
                                         Password
                                     </FieldLabel>
                                     <Input
-                                        className="py-5 px-3"
+                                        className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                         id="form-example-password"
                                         type="password"
                                         {...field}
@@ -125,8 +130,12 @@ export default function LoginForm({setIsLoggingIn}) {
                             )}
                         />
                         <div className="flex gap-2">
-                            <p>New to MedApi?</p>
-                            <button type="button" className="text-blue-600 cursor-pointer" onClick={() => setIsLoggingIn(false)}>
+                            <p className="text-gray-700">New to MedApi?</p>
+                            <button
+                                type="button"
+                                className="text-blue-600 cursor-pointer hover:text-blue-700 font-medium"
+                                onClick={() => setIsLoggingIn(false)}
+                            >
                                 Create new account
                             </button>
                         </div>
@@ -136,9 +145,13 @@ export default function LoginForm({setIsLoggingIn}) {
                         <button
                             form="login-form-example"
                             type="submit"
-                            className="w-full bg-blue-500! text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600! active:bg-blue-700! transition-colors duration-200"
+                            className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors duration-200 flex items-center justify-center gap-2"
                         >
-                            Login
+                            {loading ? (
+                                <Spinner className="w-6 h-6 text-white" />
+                            ) : (
+                                "Login"
+                            )}
                         </button>
                     </div>
                 </form>

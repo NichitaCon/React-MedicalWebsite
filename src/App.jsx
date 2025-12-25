@@ -6,6 +6,7 @@ import { HeaderProvider } from "@/context/HeaderContext";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { SiteHeader } from "./components/site-header";
+import poppyField from "./assets/images/poppyField.png";
 
 // import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
@@ -53,8 +54,7 @@ function AppLayout() {
                 // NO TOKEN: Show background image, NO SiteHeader
                 <SidebarInset
                     style={{
-                        backgroundImage:
-                            'url("/src/assets/images/poppyField.png")',
+                        backgroundImage: `url(${poppyField})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                         backgroundRepeat: "no-repeat",

@@ -20,6 +20,7 @@ import DoctorCreateForm from "@/components/customComponents/CreateDoctorForm";
 import DoctorUpdateForm from "@/components/customComponents/UpdateDoctorForm";
 import dayjs from "dayjs";
 import CreateButton from "@/components/customComponents/CreateButton";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
 
 // import {
 //   Card,
@@ -36,6 +37,7 @@ export default function DoctorsIndex() {
     const [createDoctorModal, setCreateDoctorModal] = useState(false);
     const [editDoctorModal, setEditDoctorModal] = useState(null); // holds doctor object or null
     const [searchQuery, setSearchQuery] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const onCreateCallback = (newDoctor) => {
@@ -54,6 +56,7 @@ export default function DoctorsIndex() {
 
     useEffect(() => {
         const fetchDoctors = async () => {
+            setLoading(true);
             const options = {
                 method: "GET",
                 url: "/doctors",
@@ -62,7 +65,10 @@ export default function DoctorsIndex() {
                 let response = await axios.request(options);
                 console.log(response.data);
                 setDoctors(response.data);
+                setLoading(false);
             } catch (error) {
+                setLoading(false);
+
                 console.log(error);
             }
         };
@@ -133,59 +139,68 @@ export default function DoctorsIndex() {
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    {filteredDoctors.map((doctor) => (
-                        <TableRow key={doctor.id}>
-                            <TableCell>
-                                Dr {doctor.first_name} {doctor.last_name}
-                            </TableCell>
-                            <TableCell>{doctor.specialisation}</TableCell>
-                            <TableCell>{doctor.email}</TableCell>
-                            <TableCell>{doctor.phone}</TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 text-right justify-end">
-                                    <Button
-                                        className="cursor-pointer hover:border-blue-500"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            navigate(`/doctors/${doctor.id}`, {
-                                                state: { doctor },
-                                            })
-                                        }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        className="cursor-pointer hover:border-blue-500"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setEditDoctorModal(doctor.id)
-                                        }
-                                    >
-                                        <Pencil />
-                                    </Button>
-                                    <DeleteBtn
-                                        onDeleteCallBack={onDeleteCallBack}
-                                        resource="doctors"
-                                        id={doctor.id}
+                {loading ? (
+                    <TableLoadingSkeleton columnSpan={5} />
+                ) : (
+                    <TableBody>
+                        {filteredDoctors.map((doctor) => (
+                            <TableRow key={doctor.id}>
+                                <TableCell>
+                                    Dr {doctor.first_name} {doctor.last_name}
+                                </TableCell>
+                                <TableCell>{doctor.specialisation}</TableCell>
+                                <TableCell>{doctor.email}</TableCell>
+                                <TableCell>{doctor.phone}</TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 text-right justify-end">
+                                        <Button
+                                            className="cursor-pointer hover:border-blue-500"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/doctors/${doctor.id}`,
+                                                    {
+                                                        state: { doctor },
+                                                    }
+                                                )
+                                            }
+                                        >
+                                            <Eye />
+                                        </Button>
+                                        <Button
+                                            className="cursor-pointer hover:border-blue-500"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setEditDoctorModal(doctor.id)
+                                            }
+                                        >
+                                            <Pencil />
+                                        </Button>
+                                        <DeleteBtn
+                                            onDeleteCallBack={onDeleteCallBack}
+                                            resource="doctors"
+                                            id={doctor.id}
+                                        />
+                                    </div>
+                                </TableCell>
+                                {/* Edit Doctor Modal */}
+                                <Modal
+                                    renderCondition={
+                                        editDoctorModal === doctor.id
+                                    }
+                                    onClose={() => setEditDoctorModal(null)}
+                                >
+                                    <DoctorUpdateForm
+                                        doctor={doctor}
+                                        onUpdateCallback={onUpdateCallback}
                                     />
-                                </div>
-                            </TableCell>
-                            {/* Edit Doctor Modal */}
-                            <Modal
-                                renderCondition={editDoctorModal === doctor.id}
-                                onClose={() => setEditDoctorModal(null)}
-                            >
-                                <DoctorUpdateForm
-                                    doctor={doctor}
-                                    onUpdateCallback={onUpdateCallback}
-                                />
-                            </Modal>
-                        </TableRow>
-                    ))}
-                </TableBody>
+                                </Modal>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                )}
             </Table>
         </div>
     );

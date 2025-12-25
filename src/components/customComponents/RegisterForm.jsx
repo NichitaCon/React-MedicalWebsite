@@ -18,10 +18,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
+import { Spinner } from "../ui/spinner";
 
 export default function RegisterForm({setIsLoggingIn}) {
     const { onRegister } = useAuth();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     const formSchema = z
         .object({
@@ -30,11 +32,11 @@ export default function RegisterForm({setIsLoggingIn}) {
             last_name: z.string().min(1, "Last name is required"),
             password: z
                 .string()
-                .min(8, "Password needs to be minimum 8 characters :P")
+                .min(8, "Password needs to be minimum 8 characters")
                 .max(30, "maximum characters is 30"),
             confirmPassword: z
                 .string()
-                .min(8, "Password needs to be minimum 8 characters :P")
+                .min(8, "Password needs to be minimum 8 characters")
                 .max(30, "maximum characters is 30"),
         })
         .refine((data) => data.password === data.confirmPassword, {
@@ -56,22 +58,28 @@ export default function RegisterForm({setIsLoggingIn}) {
 
     const submitForm = async (data) => {
         console.log("submitform data:", data);
+        setLoading(true);
+        try {
+            let response = await onRegister(data.email, data.password, data.first_name, data.last_name);
+            if (response?.msg) {
+                toast(response.msg, {
+                    description: response.success
+                        ? "Account created successfully"
+                        : "Registration failed. Please try again",
+                    duration: 3000,
+                });
 
-        let response = await onRegister(data.email, data.password, data.first_name, data.last_name);
-        if (response?.msg) {
-            toast(response.msg, {
-                description: response.success
-                    ? "Account created successfully"
-                    : "Registration failed. Please try again",
-                duration: 3000,
-            });
-
-            // Redirect to appointments page on successful registration
-            if (response.success) {
-                navigate("/appointments");
-                // Reset back to login screen for when the user logs out
-                setIsLoggingIn(true)
+                // Redirect to appointments page on successful registration
+                if (response.success) {
+                    navigate("/dashboard");
+                    // Reset back to login screen for when the user logs out
+                    setIsLoggingIn(true);
+                }
             }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -93,12 +101,12 @@ export default function RegisterForm({setIsLoggingIn}) {
                                 <Field className="gap-1">
                                     <FieldLabel
                                         htmlFor="form-example-email"
-                                        className="text-md font-normal"
+                                        className="text-md font-normal text-gray-900"
                                     >
                                         Email
                                     </FieldLabel>
                                     <Input
-                                        className="py-5 px-3"
+                                        className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                         id="form-example-email"
                                         {...field}
                                         placeholder="nichita@example.com"
@@ -121,12 +129,12 @@ export default function RegisterForm({setIsLoggingIn}) {
                                     <Field className="gap-1 flex-1">
                                         <FieldLabel
                                             htmlFor="form-example-first-name"
-                                            className="text-md font-normal"
+                                            className="text-md font-normal text-gray-900"
                                         >
                                             First Name
                                         </FieldLabel>
                                         <Input
-                                            className="py-5 px-3"
+                                            className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                             id="form-example-first-name"
                                             {...field}
                                             placeholder=""
@@ -148,12 +156,12 @@ export default function RegisterForm({setIsLoggingIn}) {
                                     <Field className="gap-1 flex-1">
                                         <FieldLabel
                                             htmlFor="form-example-last-name"
-                                            className="text-md font-normal"
+                                            className="text-md font-normal text-gray-900"
                                         >
                                             Last Name
                                         </FieldLabel>
                                         <Input
-                                            className="py-5 px-3"
+                                            className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                             id="form-example-last-name"
                                             {...field}
                                             placeholder=""
@@ -176,12 +184,12 @@ export default function RegisterForm({setIsLoggingIn}) {
                                 <Field className="gap-1">
                                     <FieldLabel
                                         htmlFor="form-example-password"
-                                        className="text-md font-normal"
+                                        className="text-md font-normal text-gray-900"
                                     >
                                         Password
                                     </FieldLabel>
                                     <Input
-                                        className="py-5 px-3"
+                                        className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                         id="form-example-password"
                                         type="password"
                                         {...field}
@@ -203,12 +211,12 @@ export default function RegisterForm({setIsLoggingIn}) {
                                 <Field className="gap-1">
                                     <FieldLabel
                                         htmlFor="form-example-confirm-password"
-                                        className="text-md font-normal"
+                                        className="text-md font-normal text-gray-900"
                                     >
                                         Confirm password
                                     </FieldLabel>
                                     <Input
-                                        className="py-5 px-3"
+                                        className="py-5 px-3 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                                         id="form-example-confirm-password"
                                         type="password"
                                         {...field}
@@ -224,8 +232,8 @@ export default function RegisterForm({setIsLoggingIn}) {
                             )}
                         />
                         <div className="flex gap-2">
-                            <p>Already have an account?</p>
-                            <button className="text-blue-600 cursor-pointer" onClick={() => {setIsLoggingIn(true)}}>
+                            <p className="text-gray-700">Already have an account?</p>
+                            <button type="button" className="text-blue-600 cursor-pointer hover:text-blue-700 font-medium" onClick={() => {setIsLoggingIn(true)}}>
                                 Sign in
                             </button>
                         </div>
@@ -235,9 +243,14 @@ export default function RegisterForm({setIsLoggingIn}) {
                         <button
                             form="register-form-example"
                             type="submit"
-                            className="w-full bg-blue-500! text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600! active:bg-blue-700! transition-colors duration-200"
+                            disabled={loading}
+                            className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors duration-200 flex items-center justify-center gap-2"
                         >
-                            Register
+                            {loading ? (
+                                <Spinner className="w-6 h-6 text-white" />
+                            ) : (
+                                "Register"
+                            )}
                         </button>
                     </div>
                 </form>

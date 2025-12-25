@@ -11,7 +11,6 @@ import {
     Tooltip,
 } from "recharts";
 
-
 export function ChartLineDefault({ appointments }) {
     // Helper functions
     // getLastNDates gets the last n days worth of appointments (e.g. n = 7)
@@ -24,8 +23,6 @@ export function ChartLineDefault({ appointments }) {
         }
         return dates;
     }
-
-
 
     function buildAppointmentSeries(appointments) {
         const last14 = getLastNDates(14);
@@ -49,7 +46,7 @@ export function ChartLineDefault({ appointments }) {
 
     const chartData = buildAppointmentSeries(appointments || []);
     // console.log("chartData in chart", chartData);
-    
+
     return (
         <div className="w-full h-full flex flex-col bg-card rounded-lg border p-4">
             <div className="mb-4">
@@ -80,19 +77,22 @@ export function ChartLineDefault({ appointments }) {
                             tickLine={false}
                             axisLine={false}
                             tickMargin={8}
-                            tick={{ fill: "hsl(var(--muted-foreground))" }}
+                            tick={{ fill: "currentColor" }}
+                            className="text-muted-foreground"
                             tickFormatter={(value) => value.slice(5)}
                         />
                         <YAxis
                             tickLine={false}
                             axisLine={false}
-                            tick={{ fill: "hsl(var(--muted-foreground))" }}
+                            tick={{ fill: "currentColor" }}
+                            className="text-muted-foreground"
                         />
                         <Tooltip
                             contentStyle={{
                                 backgroundColor: "hsl(var(--popover))",
                                 border: "1px solid hsl(var(--border))",
                                 borderRadius: "6px",
+                                color: "hsl(var(--popover-foreground))",
                             }}
                         />
                         <Line

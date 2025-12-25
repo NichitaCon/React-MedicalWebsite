@@ -34,7 +34,7 @@ export default function LoginForm() {
         email: z.email(),
         password: z
             .string()
-            .min(8, "Password needs to be minimum 8 characters :P")
+            .min(8, "Password needs to be minimum 8 characters")
             .max(30, "maximum characters is 30"),
     });
 

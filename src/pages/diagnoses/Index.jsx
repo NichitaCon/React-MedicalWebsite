@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Modal from "@/components/customComponents/Modal";
 import CreateEditDiagnosisForm from "@/components/customComponents/CreateEditDiagnosisForm";
 import CreateButton from "@/components/customComponents/CreateButton";
+import TableLoadingSkeleton from "@/components/customComponents/TableLoadingSkeleton";
 
 export default function DiagnosesIndex() {
     const [diagnoses, setDiagnoses] = useState([]);
@@ -100,8 +101,6 @@ export default function DiagnosesIndex() {
         setDiagnoses(diagnoses.filter((d) => d.id !== id));
     };
 
-    if (loading) return <h1>Loading</h1>;
-
     const q = (searchQuery || "").trim().toLowerCase();
     const filteredDiagnoses = diagnoses.filter((diagnosis) => {
         if (!q) return true;
@@ -167,36 +166,40 @@ export default function DiagnosesIndex() {
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    {filteredDiagnoses.map((diagnosis) => (
-                        <TableRow key={diagnosis.id}>
-                            <TableCell>{diagnosis.patient_name}</TableCell>
-                            <TableCell>{diagnosis.condition}</TableCell>
-                            <TableCell>
-                                {diagnosis.diagnosis_date
-                                    ? dayjs
-                                          .unix(diagnosis.diagnosis_date)
-                                          .format("D/MM/YYYY")
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                {diagnosis.createdAt
-                                    ? dayjs(diagnosis.createdAt).format(
-                                          "D/MM/YYYY hh:mm a"
-                                      )
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                {diagnosis.updatedAt
-                                    ? dayjs(diagnosis.updatedAt).format(
-                                          "D/MM/YYYY hh:mm a"
-                                      )
-                                    : "-"}
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex gap-2 text-right justify-end">
-                                    {/* SingleView Not needed since All available diagnosis data is already shown in the table */}
-                                    {/* <Button
+
+                {loading ? (
+                    <TableLoadingSkeleton columnSpan={6}/>
+                ) : (
+                    <TableBody>
+                        {filteredDiagnoses.map((diagnosis) => (
+                            <TableRow key={diagnosis.id}>
+                                <TableCell>{diagnosis.patient_name}</TableCell>
+                                <TableCell>{diagnosis.condition}</TableCell>
+                                <TableCell>
+                                    {diagnosis.diagnosis_date
+                                        ? dayjs
+                                              .unix(diagnosis.diagnosis_date)
+                                              .format("D/MM/YYYY")
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {diagnosis.createdAt
+                                        ? dayjs(diagnosis.createdAt).format(
+                                              "D/MM/YYYY hh:mm a"
+                                          )
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    {diagnosis.updatedAt
+                                        ? dayjs(diagnosis.updatedAt).format(
+                                              "D/MM/YYYY hh:mm a"
+                                          )
+                                        : "-"}
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 text-right justify-end">
+                                        {/* SingleView Not needed since All available diagnosis data is already shown in the table */}
+                                        {/* <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
@@ -207,44 +210,46 @@ export default function DiagnosesIndex() {
                                     >
                                         <Eye />
                                     </Button> */}
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            setShowEditDiagnosisForm(
-                                                diagnosis.id
-                                            )
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowEditDiagnosisForm(
+                                                    diagnosis.id
+                                                )
+                                            }
+                                        >
+                                            <Pencil />
+                                        </Button>
+                                        <DeleteBtn
+                                            resource="diagnoses"
+                                            id={diagnosis.id}
+                                            onDeleteCallBack={onDeleteCallback}
+                                        />
+                                    </div>
+                                    {/* Edit Diagnosis Modal */}
+                                    <Modal
+                                        renderCondition={
+                                            showEditDiagnosisForm ==
+                                            diagnosis.id
+                                        }
+                                        onClose={() =>
+                                            setShowEditDiagnosisForm(null)
                                         }
                                     >
-                                        <Pencil />
-                                    </Button>
-                                    <DeleteBtn
-                                        resource="diagnoses"
-                                        id={diagnosis.id}
-                                        onDeleteCallBack={onDeleteCallback}
-                                    />
-                                </div>
-                                {/* Edit Diagnosis Modal */}
-                                <Modal
-                                    renderCondition={
-                                        showEditDiagnosisForm == diagnosis.id
-                                    }
-                                    onClose={() =>
-                                        setShowEditDiagnosisForm(null)
-                                    }
-                                >
-                                    <CreateEditDiagnosisForm
-                                        diagnosis={diagnosis}
-                                        setShowDiagnosisForm={
-                                            setShowEditDiagnosisForm
-                                        }
-                                        onUpdateCallback={onUpdateCallback}
-                                    />
-                                </Modal>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
+                                        <CreateEditDiagnosisForm
+                                            diagnosis={diagnosis}
+                                            setShowDiagnosisForm={
+                                                setShowEditDiagnosisForm
+                                            }
+                                            onUpdateCallback={onUpdateCallback}
+                                        />
+                                    </Modal>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                )}
             </Table>
         </div>
     );
