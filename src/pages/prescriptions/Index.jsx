@@ -22,6 +22,7 @@ export default function PrescriptionsIndex() {
     const [doctors, setDoctors] = useState([]);
     const [diagnoses, setDiagnoses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const { token } = useAuth();
     const [showCreatePrescriptionForm, setShowCreatePrescriptionForm] =
         useState(false);
@@ -130,8 +131,12 @@ export default function PrescriptionsIndex() {
                     ? "Active"
                     : "Expired",
         };
-        // setDiagnoses([...diagnoses]);
-        setPrescriptions([...prescriptions, enrichedPrescription]);
+
+        setPrescriptions((prev) =>
+            [...prev, enrichedPrescription].sort(
+                (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+            )
+        );
         setShowCreatePrescriptionForm(false);
     };
 
@@ -161,6 +166,7 @@ export default function PrescriptionsIndex() {
                     ? "Active"
                     : "Expired",
         };
+
         setPrescriptions((prev) =>
             prev.map((p) =>
                 p.id === enrichedPrescription.id ? enrichedPrescription : p
@@ -175,15 +181,49 @@ export default function PrescriptionsIndex() {
 
     if (loading) return <h1>Loading</h1>;
 
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredPrescriptions = prescriptions.filter((prescription) => {
+        if (!q) return true;
+        const prescriptionId = prescription.id ? String(prescription.id) : "";
+        const start = prescription.start_date
+            ? dayjs.unix(prescription.start_date).format("D/MM/YYYY")
+            : "";
+        const end = prescription.end_date
+            ? dayjs.unix(prescription.end_date).format("D/MM/YYYY")
+            : "";
+        return (
+            prescriptionId.includes(q) ||
+            (prescription.patient_name || "").toLowerCase().includes(q) ||
+            (prescription.doctor_name || "").toLowerCase().includes(q) ||
+            (prescription.diagnosis_condition || "")
+                .toLowerCase()
+                .includes(q) ||
+            (prescription.medication || "").toLowerCase().includes(q) ||
+            (prescription.dosage || "").toLowerCase().includes(q) ||
+            (prescription.status || "").toLowerCase().includes(q) ||
+            start.toLowerCase().includes(q) ||
+            end.toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div>
             <div className="mb-4 mr-auto block">
-                <Button
-                    variant="outline"
-                    onClick={() => setShowCreatePrescriptionForm(true)}
-                >
-                    Create New Prescription
-                </Button>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search prescriptions (patient, doctor, med, status, date...)"
+                        className="border px-3 py-2 rounded-md w-72"
+                    />
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowCreatePrescriptionForm(true)}
+                    >
+                        Create New Prescription
+                    </Button>
+                </div>
             </div>
 
             {/* Create Prescription Modal */}
@@ -226,7 +266,7 @@ export default function PrescriptionsIndex() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {prescriptions.map((prescription) => (
+                    {filteredPrescriptions.map((prescription) => (
                         <TableRow key={prescription.id}>
                             <TableCell>{prescription.patient_name}</TableCell>
                             <TableCell>{prescription.doctor_name}</TableCell>

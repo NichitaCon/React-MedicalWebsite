@@ -1,5 +1,11 @@
 import DashboardCard from "@/components/customComponents/DashboardCard";
-import { User } from "lucide-react";
+import {
+    Calendar,
+    CalendarDays,
+    HeartPulse,
+    Tablets,
+    User,
+} from "lucide-react";
 import AppointmentsIndex from "../appointments/Index";
 import { ChartLineDefault } from "@/components/ui/chart-line-default";
 import axios from "@/config/api";
@@ -10,7 +16,6 @@ export default function DashboardIndex() {
     const [prescriptions, setPrescriptions] = useState([]);
     const [patients, setPatients] = useState([]);
     const [doctors, setDoctors] = useState([]);
-    const [diagnoses, setDiagnoses] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
     const { token } = useAuth();
@@ -20,22 +25,26 @@ export default function DashboardIndex() {
             console.log("fetching appointments...");
             try {
                 setLoading(true);
-                const [doctorRes, appointmentsRes, patientsRes, prescriptionsRes] =
-                    await Promise.all([
-                        axios.get(`/doctors`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
-                        axios.get(`/appointments`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
+                const [
+                    doctorRes,
+                    appointmentsRes,
+                    patientsRes,
+                    prescriptionsRes,
+                ] = await Promise.all([
+                    axios.get(`/doctors`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    axios.get(`/appointments`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
 
-                        axios.get(`/patients`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
-                        axios.get(`/prescriptions`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }),
-                    ]);
+                    axios.get(`/patients`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    axios.get(`/prescriptions`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
 
                 // Map appointments to include patient + doctor's name
                 const appointmentsWithPatientsAndDoctors = appointmentsRes.data
@@ -93,6 +102,34 @@ export default function DashboardIndex() {
         fetchAll();
     }, []);
 
+    const onCreateAppointmentCallback = (newAppointment) => {
+        console.log("OnCreateCallback called with:", newAppointment);
+        const patient = patients.find(
+            (p) => p.id === newAppointment.patient_id
+        );
+        const doctor = doctors.find((d) => d.id === newAppointment.doctor_id);
+
+        const enrichedAppointment = {
+            ...newAppointment,
+            patient_name: patient
+                ? `${patient.first_name} ${patient.last_name}`
+                : "Unknown",
+            doctor_name: doctor
+                ? `${doctor.first_name} ${doctor.last_name}`
+                : "Unknown",
+            status:
+                newAppointment.appointment_date * 1000 < Date.now()
+                    ? "Completed"
+                    : "Upcoming",
+        };
+        const sortedAppointments = [...appointments, enrichedAppointment].sort(
+            (a, b) => b.appointment_date - a.appointment_date
+        );
+        console.log(enrichedAppointment);
+        setAppointments(sortedAppointments);
+        // setShowCreateAppointmentsForm(false);
+    };
+
     const upComingAppointments = appointments.filter(
         (upcomingAppointment) => upcomingAppointment.status === "Upcoming"
     );
@@ -109,8 +146,17 @@ export default function DashboardIndex() {
         (doctor) => new Date(doctor.createdAt) >= oneWeekAgo
     ).length;
 
-    const appointmentsCreatedThisWeek = appointments.filter(
-        (appointment) => new Date(appointment.createdAt) >= oneWeekAgo
+    // Calculate appointments scheduled for the upcoming week
+    const oneWeekFromNow = new Date();
+    oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+
+    const upcomingAppointmentsThisWeek = upComingAppointments.filter(
+        (appointment) => {
+            const appointmentDate = new Date(
+                appointment.appointment_date * 1000
+            );
+            return appointmentDate <= oneWeekFromNow;
+        }
     ).length;
 
     const activePrescriptions = prescriptions.filter(
@@ -119,8 +165,8 @@ export default function DashboardIndex() {
 
     // Calculate prescriptions created this week that are still active
     const activePrescriptionsCreatedThisWeek = prescriptions.filter(
-        (prescription) => 
-            new Date(prescription.createdAt) >= oneWeekAgo && 
+        (prescription) =>
+            new Date(prescription.createdAt) >= oneWeekAgo &&
             prescription.status === "Active"
     ).length;
 
@@ -133,7 +179,8 @@ export default function DashboardIndex() {
     ).length;
 
     // Net change: new active prescriptions minus expired ones
-    const activePrescriptionsTrend = activePrescriptionsCreatedThisWeek - prescriptionsExpiredThisWeek;
+    const activePrescriptionsTrend =
+        activePrescriptionsCreatedThisWeek - prescriptionsExpiredThisWeek;
 
     console.log("upcomingAppointments:", upComingAppointments);
     return (
@@ -152,21 +199,26 @@ export default function DashboardIndex() {
                             cardTitle="Total Doctors"
                             cardNumber={doctors.length}
                             cardWeeklyTrendNumber={doctorsCreatedThisWeek}
-                            Icon={User}
+                            Icon={HeartPulse}
                         />
                     </div>
                     <div className="flex flex-row gap-3">
                         <DashboardCard
                             cardTitle="Upcoming Appointments"
+                            customDescription="Scheduled for this week"
                             cardNumber={upComingAppointments.length}
-                            cardWeeklyTrendNumber={appointmentsCreatedThisWeek}
-                            Icon={User}
+                            cardWeeklyTrendNumber={upcomingAppointmentsThisWeek}
+                            Icon={CalendarDays}
                         />
                         <DashboardCard
                             cardTitle="Active Prescriptions"
                             cardNumber={activePrescriptions.length}
-                            cardWeeklyTrendNumber={activePrescriptionsTrend >= 0 ? `+${activePrescriptionsTrend}` : activePrescriptionsTrend}
-                            Icon={User}
+                            cardWeeklyTrendNumber={
+                                activePrescriptionsTrend >= 0
+                                    ? `+${activePrescriptionsTrend}`
+                                    : activePrescriptionsTrend
+                            }
+                            Icon={Tablets}
                         />
                     </div>
                 </div>
@@ -176,7 +228,10 @@ export default function DashboardIndex() {
             </div>
 
             <div className="p-3 border rounded-lg ">
-                <AppointmentsIndex appointmentsProp={appointments} />
+                <AppointmentsIndex
+                    appointmentsProp={appointments}
+                    onCreateCallbackProp={onCreateAppointmentCallback}
+                />
             </div>
         </div>
     );

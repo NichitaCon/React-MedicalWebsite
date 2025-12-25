@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import Modal from "@/components/customComponents/Modal";
 import DoctorCreateForm from "@/components/customComponents/CreateDoctorForm";
 import DoctorUpdateForm from "@/components/customComponents/UpdateDoctorForm";
+import dayjs from "dayjs";
+import CreateButton from "@/components/customComponents/CreateButton";
 
 // import {
 //   Card,
@@ -33,6 +35,7 @@ export default function DoctorsIndex() {
     const [doctors, setDoctors] = useState([]);
     const [createDoctorModal, setCreateDoctorModal] = useState(false);
     const [editDoctorModal, setEditDoctorModal] = useState(null); // holds doctor object or null
+    const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
 
     const onCreateCallback = (newDoctor) => {
@@ -71,15 +74,46 @@ export default function DoctorsIndex() {
         setDoctors(doctors.filter((doctor) => doctor.id !== id));
     };
 
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredDoctors = doctors.filter((doctor) => {
+        if (!q) return true;
+        const doctorId = doctor.id ? String(doctor.id) : "";
+        const fullName = `${(doctor.first_name || "").toLowerCase()} ${(
+            doctor.last_name || ""
+        ).toLowerCase()}`.trim();
+        const created = doctor.createdAt
+            ? dayjs(doctor.createdAt).format("D/MM/YYYY")
+            : "";
+        const updated = doctor.updatedAt
+            ? dayjs(doctor.updatedAt).format("D/MM/YYYY")
+            : "";
+        return (
+            doctorId.includes(q) ||
+            fullName.includes(q) ||
+            (doctor.email || "").toLowerCase().includes(q) ||
+            (doctor.phone || "").toLowerCase().includes(q) ||
+            (doctor.specialisation || "").toLowerCase().includes(q) ||
+            created.toLowerCase().includes(q) ||
+            updated.toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div>
             <div className="mb-4 mr-auto block">
-                <Button
-                    variant="outline"
-                    onClick={() => setCreateDoctorModal(true)}
-                >
-                    Create New Doctor
-                </Button>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search doctors (name, email, phone, speciality, date...)"
+                        className="border px-3 py-2 rounded-md w-72"
+                    />
+                    <CreateButton
+                        resourceName="Doctor"
+                        onShowForm={() => setCreateDoctorModal(true)}
+                    />
+                </div>
             </div>
             <Modal
                 renderCondition={createDoctorModal}
@@ -100,7 +134,7 @@ export default function DoctorsIndex() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {doctors.map((doctor) => (
+                    {filteredDoctors.map((doctor) => (
                         <TableRow key={doctor.id}>
                             <TableCell>
                                 Dr {doctor.first_name} {doctor.last_name}

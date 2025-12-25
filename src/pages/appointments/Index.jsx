@@ -16,8 +16,10 @@ import { Pencil } from "lucide-react";
 import DeleteBtn from "@/components/customComponents/DeleteBtn";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import dayjs from "dayjs";
 import CreateEditAppointmentForm from "@/components/customComponents/CreateEditAppointmentForm";
 import AppointmentDetails from "@/components/customComponents/AppointmentDetails";
+import CreateButton from "@/components/customComponents/CreateButton";
 
 // import {
 //   Card,
@@ -29,12 +31,16 @@ import AppointmentDetails from "@/components/customComponents/AppointmentDetails
 //   CardTitle,
 // } from "@/components/ui/card";
 
-export default function AppointmentsIndex({ appointmentsProp }) {
+export default function AppointmentsIndex({
+    appointmentsProp,
+    onCreateCallbackProp,
+}) {
     const [appointments, setAppointments] = useState(
         appointmentsProp ? appointmentsProp : []
     );
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const [showCreateAppointmentForm, setShowCreateAppointmentsForm] =
         useState(false);
@@ -86,29 +92,34 @@ export default function AppointmentsIndex({ appointmentsProp }) {
 
                     // Map appointments to include patient + doctor's name
                     const appointmentsWithPatientsAndDoctors =
-                        appointmentsRes.data.map((appt) => {
-                            const patient = patientsRes.data.find(
-                                (p) => p.id === appt.patient_id
-                            );
+                        appointmentsRes.data
+                            .map((appt) => {
+                                const patient = patientsRes.data.find(
+                                    (p) => p.id === appt.patient_id
+                                );
 
-                            const doctor = doctorRes.data.find(
-                                (d) => d.id === appt.doctor_id
+                                const doctor = doctorRes.data.find(
+                                    (d) => d.id === appt.doctor_id
+                                );
+                                return {
+                                    ...appt,
+                                    patient_name: patient
+                                        ? `${patient.first_name} ${patient.last_name}`
+                                        : "Unknown",
+                                    doctor_name: doctor
+                                        ? `${doctor.first_name} ${doctor.last_name}`
+                                        : "Unknown",
+                                    status:
+                                        appt.appointment_date * 1000 <
+                                        Date.now()
+                                            ? "Completed"
+                                            : "Upcoming",
+                                };
+                            })
+                            .sort(
+                                (a, b) =>
+                                    b.appointment_date - a.appointment_date
                             );
-                            return {
-                                ...appt,
-                                patient_name: patient
-                                    ? `${patient.first_name} ${patient.last_name}`
-                                    : "Unknown",
-                                doctor_name: doctor
-                                    ? `${doctor.first_name} ${doctor.last_name}`
-                                    : "Unknown",
-                                status:
-                                    appt.appointment_date * 1000 < Date.now()
-                                        ? "Completed"
-                                        : "Upcoming",
-                            };
-                        })
-                        .sort((a, b) => b.appointment_date - a.appointment_date);
 
                     console.log(
                         "appointmentsWithPatientsAndDoctors:",
@@ -133,6 +144,9 @@ export default function AppointmentsIndex({ appointmentsProp }) {
     }, []);
 
     const onCreateCallback = (newAppointment) => {
+        if (onCreateCallbackProp) {
+            onCreateCallbackProp(newAppointment);
+        }
         console.log("OnCreateCallback called with:", newAppointment);
         const patient = patients.find(
             (p) => p.id === newAppointment.patient_id
@@ -152,8 +166,11 @@ export default function AppointmentsIndex({ appointmentsProp }) {
                     ? "Completed"
                     : "Upcoming",
         };
+        const sortedAppointments = [...appointments, enrichedAppointment].sort(
+            (a, b) => b.appointment_date - a.appointment_date
+        );
         console.log(enrichedAppointment);
-        setAppointments([...appointments, enrichedAppointment]);
+        setAppointments(sortedAppointments);
         setShowCreateAppointmentsForm(false);
     };
 
@@ -210,15 +227,43 @@ export default function AppointmentsIndex({ appointmentsProp }) {
         );
     }
 
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredAppointments = appointments.filter((appointment) => {
+        if (!q) return true;
+        const appointmentId = appointment.id ? String(appointment.id) : "";
+        const apptDate = appointment.appointment_date
+            ? dayjs
+                  .unix(appointment.appointment_date)
+                  .format("M/D/YYYY, h:mm:ss A")
+            : "";
+        return (
+            appointmentId.includes(q) ||
+            (appointment.patient_name || "").toLowerCase().includes(q) ||
+            (appointment.doctor_name || "").toLowerCase().includes(q) ||
+            (appointment.status || "").toLowerCase().includes(q) ||
+            apptDate.toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div>
-            <div className={"mb-4 mr-auto block"}>
-                <Button
-                    variant="outline"
-                    onClick={() => setShowCreateAppointmentsForm(true)}
-                >
-                    Create New Appointment
-                </Button>
+            <div className="mb-4 mr-auto flex flex-row justify-between items-center">
+                {!!onCreateCallbackProp && (
+                    <h2 className="text-2xl font-medium">Appointments</h2>
+                )}
+                <div className="flex items-center gap-2">
+                    <input
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search appointments (patient, doctor, status, date...)"
+                        className="border px-3 py-2 rounded-md w-72"
+                    />
+                    <CreateButton
+                        resourceName="Appointment"
+                        onShowForm={() => setShowCreateAppointmentsForm(true)}
+                    />
+                </div>
             </div>
             {showCreateAppointmentForm && (
                 <div
@@ -250,13 +295,13 @@ export default function AppointmentsIndex({ appointmentsProp }) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {appointments.map((appointment) => (
+                    {filteredAppointments.map((appointment) => (
                         <TableRow key={appointment.id}>
                             <TableCell>
                                 {appointment.appointment_date
-                                    ? new Date(
-                                          appointment.appointment_date * 1000
-                                      ).toLocaleString()
+                                    ? dayjs
+                                          .unix(appointment.appointment_date)
+                                          .format("M/D/YYYY, h:mm:ss A")
                                     : "-"}
                             </TableCell>
                             <TableCell>

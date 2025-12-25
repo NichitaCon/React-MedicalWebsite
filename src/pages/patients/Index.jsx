@@ -16,10 +16,12 @@ import { useAuth } from "@/hooks/useAuth";
 import CreateEditPatientForm from "@/components/customComponents/CreateEditPatientForm";
 import dayjs from "dayjs";
 import PatientDetails from "@/components/customComponents/PatientDetails";
+import CreateButton from "@/components/customComponents/CreateButton";
 
 export default function PatientsIndex() {
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const [showCreatePatientForm, setShowCreatePatientForm] = useState(false);
     const [showEditPatientForm, setShowEditPatientForm] = useState(null);
     const [showPatientDetails, setShowPatientDetails] = useState(null);
@@ -36,6 +38,7 @@ export default function PatientsIndex() {
                 // Neat debugging trick i found from tiktok, makes a table out of the data for easy vis
                 // console.table("patients in patientsIndex:");
                 // console.table(res.data);
+                console.log("patients:", res.data);
                 setPatients(res.data);
             } catch (error) {
                 console.error("error fetching patients:", error);
@@ -64,15 +67,42 @@ export default function PatientsIndex() {
 
     if (loading) return <h1>Loading</h1>;
 
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredPatients = patients.filter((patient) => {
+        if (!q) return true;
+        const patientId = patient.id ? String(patient.id) : "";
+        const fullName = `${(patient.first_name || "").toLowerCase()} ${(
+            patient.last_name || ""
+        ).toLowerCase()}`.trim();
+        const dob = patient.date_of_birth
+            ? dayjs.unix(patient.date_of_birth).format("D/MM/YYYY")
+            : "";
+        return (
+            patientId.includes(q) ||
+            fullName.includes(q) ||
+            (patient.email || "").toLowerCase().includes(q) ||
+            (patient.phone || "").toLowerCase().includes(q) ||
+            (patient.address || "").toLowerCase().includes(q) ||
+            dob.toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div>
             <div className="mb-4 mr-auto block">
-                <Button
-                    variant="outline"
-                    onClick={() => setShowCreatePatientForm(true)}
-                >
-                    Create New Patient
-                </Button>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search patients (name, email, phone, dob, address...)"
+                        className="border px-3 py-2 rounded-md w-72"
+                    />
+                    <CreateButton
+                        resourceName="Patient"
+                        onShowForm={() => setShowCreatePatientForm(true)}
+                    />
+                </div>
             </div>
             {showCreatePatientForm && (
                 <div
@@ -103,7 +133,7 @@ export default function PatientsIndex() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {patients.map((patient) => (
+                    {filteredPatients.map((patient) => (
                         <TableRow key={patient.id}>
                             <TableCell>{patient.first_name}</TableCell>
                             <TableCell>{patient.last_name}</TableCell>
@@ -176,8 +206,10 @@ export default function PatientsIndex() {
                                             className="animate-in zoom-in-95 duration-200"
                                         >
                                             <PatientDetails
-                                            setShowPatientDetails={setShowPatientDetails}
-                                            patient={patient}
+                                                setShowPatientDetails={
+                                                    setShowPatientDetails
+                                                }
+                                                patient={patient}
                                             />
                                         </div>
                                     </div>

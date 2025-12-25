@@ -16,11 +16,13 @@ import dayjs from "dayjs";
 import { useAuth } from "@/hooks/useAuth";
 import Modal from "@/components/customComponents/Modal";
 import CreateEditDiagnosisForm from "@/components/customComponents/CreateEditDiagnosisForm";
+import CreateButton from "@/components/customComponents/CreateButton";
 
 export default function DiagnosesIndex() {
     const [diagnoses, setDiagnoses] = useState([]);
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const { token } = useAuth();
     const [showCreateDiagnosisForm, setShowCreateDiagnosisForm] =
         useState(false);
@@ -100,15 +102,47 @@ export default function DiagnosesIndex() {
 
     if (loading) return <h1>Loading</h1>;
 
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredDiagnoses = diagnoses.filter((diagnosis) => {
+        if (!q) return true;
+        const diagId = diagnosis.id ? String(diagnosis.id) : "";
+        const patientName = (diagnosis.patient_name || "").toLowerCase();
+        const condition = (diagnosis.condition || "").toLowerCase();
+        const diagDate = diagnosis.diagnosis_date
+            ? dayjs.unix(diagnosis.diagnosis_date).format("D/MM/YYYY")
+            : "";
+        const created = diagnosis.createdAt
+            ? dayjs(diagnosis.createdAt).format("D/MM/YYYY hh:mm a")
+            : "";
+        const updated = diagnosis.updatedAt
+            ? dayjs(diagnosis.updatedAt).format("D/MM/YYYY hh:mm a")
+            : "";
+        return (
+            diagId.includes(q) ||
+            patientName.includes(q) ||
+            condition.includes(q) ||
+            diagDate.toLowerCase().includes(q) ||
+            created.toLowerCase().includes(q) ||
+            updated.toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div>
             <div className="mb-4 mr-auto block">
-                <Button
-                    variant="outline"
-                    onClick={() => setShowCreateDiagnosisForm(true)}
-                >
-                    Create New Diagnosis
-                </Button>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search diagnoses (patient, condition, date...)"
+                        className="border px-3 py-2 rounded-md w-72"
+                    />
+                    <CreateButton
+                        resourceName="Diagnosis"
+                        onShowForm={() => setShowCreateDiagnosisForm(true)}
+                    />
+                </div>
             </div>
 
             {/* Create Diagnosis Modal */}
@@ -134,7 +168,7 @@ export default function DiagnosesIndex() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {diagnoses.map((diagnosis) => (
+                    {filteredDiagnoses.map((diagnosis) => (
                         <TableRow key={diagnosis.id}>
                             <TableCell>{diagnosis.patient_name}</TableCell>
                             <TableCell>{diagnosis.condition}</TableCell>
