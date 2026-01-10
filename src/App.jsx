@@ -2,10 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 
 import { AuthProvidor, useAuth } from "./hooks/useAuth";
 import { HeaderProvider } from "@/context/HeaderContext";
+import { useIsMobile } from "./hooks/use-mobile";
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { SiteHeader } from "./components/site-header";
+import MobileUnderDevelopment from "./components/customComponents/MobileUnderDevelopment";
 import poppyField from "./assets/images/poppyField.png";
 
 // import Navbar from "@/components/Navbar";
@@ -25,12 +27,17 @@ import DashboardIndex from "./pages/dashboard/Index";
 // Main layout component
 function AppLayout() {
     const { token } = useAuth();
+    const isMobile = useIsMobile();
     console.log("token in AppLayout:", token);
+
+    if (isMobile) {
+        return <MobileUnderDevelopment />;
+    }
 
     return (
         <SidebarProvider
             style={{
-                "--sidebar-width": token ? "calc(var(--spacing) * 82)" : "25vw",
+                "--sidebar-width": token ? "calc(var(--spacing) * 82)" : "max(25vw, 330px)",
                 "--header-height": "calc(var(--spacing) * 12)",
             }}
             className="relative bg-sidebar"
@@ -46,7 +53,7 @@ function AppLayout() {
             <AppSidebar
                 variant="inset"
                 className={`transition-all duration-500 ${
-                    token ? "" : "!pr-3"
+                    token ? "" : "pr-3!"
                 }`}
             />
 
