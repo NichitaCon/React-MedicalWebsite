@@ -35,16 +35,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import LoginForm from "./customComponents/LoginForm";
-import RegisterForm from "./customComponents/RegisterForm";
+import AuthContainer from "./customComponents/AuthContainer";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
 
 export function AppSidebar({ ...props }) {
     const location = useLocation();
     const { token, userData } = useAuth();
-    const [isLoggingIn, setIsLoggingIn] = useState(true);
     console.log("token in AppSidebar() is:", token);
 
     console.log(location);
@@ -52,10 +49,10 @@ export function AppSidebar({ ...props }) {
     const user = userData || {};
     const data = {
         user: {
-            wholeName: (user.first_name || "") + " " + (user.last_name || ""),
-            email: user.email || "",
+            wholeName: ((user.first_name || "User") + " " + (user.last_name || "")).trim(),
+            email: user.email || "user@example.com",
             avatar: "/avatars/shadcn.jpg",
-            first_name: user.first_name || "",
+            first_name: user.first_name || "User",
             last_name: user.last_name || "",
         },
         navMain: [
@@ -116,7 +113,7 @@ export function AppSidebar({ ...props }) {
                 {/* here i might be able to swap out this content for login form */}
                 {token ? (
                     <>
-                        <SidebarHeader className="pb-0!">
+                        <SidebarHeader className="!pb-0">
                             <SidebarMenu>
                                 <SidebarMenuItem>
                                     <div className="flex flex-row items-center">
@@ -138,26 +135,7 @@ export function AppSidebar({ ...props }) {
                         </SidebarFooter>
                     </>
                 ) : (
-                    <div className="p-4 flex flex-col justify-between h-full bg-white rounded-2xl">
-                        <div>
-                            <h1 className="text-5xl font-semibold mb-2 text-black">
-                                Welcome to MedApi
-                            </h1>
-                            <p className="text-gray-600">
-                                MedApi is a simple React app used for managing
-                                doctor appointments, patients and prescriptions,
-                                MedApi also serves as a demonstration of
-                                understanding the process of building complex
-                                websites with React.
-                            </p>
-                        </div>
-                        {/* TODO: add loading state for login button (open the loginform component)*/}
-                        {isLoggingIn ? (
-                            <LoginForm setIsLoggingIn={setIsLoggingIn} />
-                        ) : (
-                            <RegisterForm setIsLoggingIn={setIsLoggingIn} />
-                        )}
-                    </div>
+                    <AuthContainer />
                 )}
             </Sidebar>
         </>

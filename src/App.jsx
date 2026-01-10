@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import { AuthProvidor, useAuth } from "./hooks/useAuth";
 import { HeaderProvider } from "@/context/HeaderContext";
 
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { SiteHeader } from "./components/site-header";
 import poppyField from "./assets/images/poppyField.png";
+import AuthContainer from "./components/customComponents/AuthContainer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
@@ -25,6 +27,7 @@ import DashboardIndex from "./pages/dashboard/Index";
 // Main layout component
 function AppLayout() {
     const { token } = useAuth();
+    const isMobile = useIsMobile();
     console.log("token in AppLayout:", token);
 
     return (
@@ -43,23 +46,31 @@ function AppLayout() {
             />
 
             {/* AppSideBar is the boring old sidebar */}
-            <AppSidebar
-                variant="inset"
-                className={`transition-all duration-500 ${
-                    token ? "" : "!pr-3"
-                }`}
-            />
+            {(!token && isMobile) ? null : (
+                <AppSidebar
+                    variant="inset"
+                    className={`transition-all duration-500 ${
+                        token ? "" : "!pr-3"
+                    }`}
+                />
+            )}
 
             {!token ? (
                 // NO TOKEN: Show background image, NO SiteHeader
                 <SidebarInset
-                    style={{
+                    style={isMobile ? {} : {
                         backgroundImage: `url(${poppyField})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                         backgroundRepeat: "no-repeat",
                     }}
+                    className={isMobile ? "bg-white" : ""}
                 >
+                    {isMobile ? (
+                        <div className="h-full w-full p-4 overflow-y-auto">
+                            <AuthContainer />
+                        </div>
+                    ) : (
                     <div className="flex flex-1 flex-col">
                         <div className="@container/main flex flex-1 flex-col gap-2">
                             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -103,6 +114,7 @@ function AppLayout() {
                             </div>
                         </div>
                     </div>
+                    )}
                 </SidebarInset>
             ) : (
                 // HAS TOKEN: Normal layout WITH SiteHeader

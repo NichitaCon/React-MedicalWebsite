@@ -208,7 +208,7 @@ export default function CreateEditPrescriptionForm({
         let diagnosis;
         if (
             prescription.diagnosis_condition !== formData.diagnosis ||
-            prescription.patient_id !== formData.patient_id
+            prescription.patient_id !== parseInt(formData.patient_id)
         ) {
             console.warn(
                 "Diagnosis has been changed in CreateEditPrescriptionForm, updating diagnosis before proceeding"

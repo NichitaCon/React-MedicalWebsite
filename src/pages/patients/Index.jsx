@@ -38,7 +38,7 @@ export default function PatientsIndex() {
                 });
                 // Neat debugging trick i found from tiktok, makes a table out of the data for easy vis
                 // console.table("patients in patientsIndex:");
-                // console.table(res.data);
+                console.table(res.data);
                 console.log("patients:", res.data);
                 setPatients(res.data);
             } catch (error) {
